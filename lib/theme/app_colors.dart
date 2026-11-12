@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 /// Centralized color palette for the Plantum Smart Greenhouse app.
-/// Exact matches extracted and sampled from the Figma design.
+/// Matches the modern, clean aesthetic from the new reference design.
 class AppColors {
   AppColors._();
 
   // Screen background & surfaces
-  static const Color background = Color(0xFFF5F7F5);
+  static const Color background = Color(0xFFF4F6F5); // Soft grayish-green background
   static const Color surface = Colors.white;
   static const Color surfaceMuted = Color(0xFFECECEC);
 
@@ -20,37 +20,43 @@ class AppColors {
   static const Color toastText = Color(0xFF133C1A);
 
   // Switch Toggle
-  static const Color switchActive = Color(0xFF7772B4); // Figma slate purple
-  static const Color switchInactive = Color(0xFFCCCCCC);
+  static const Color switchActive = Color(0xFF7772B4); // Slate purple for Control screen
+  static const Color switchInactive = Color(0xFFCECECE);
   static const Color switchThumb = Color(0xFFF7F8FA);
 
   // 3D Viewport Dark Box
   static const Color darkViewport = Color(0xFF1E1E1E);
 
-  // Sensor Card Gradients (Soft pastel & vibrant blends)
-  static const Color tempCardStart = Color(0xFFFFA5A5);
-  static const Color tempCardEnd = Color(0xFFFF7272);
+  // Sensor Card Colors (New White Card Style)
+  static const Color cardBg = Colors.white;
+  static const Color cardBorder = Color(0xFFE8ECEA);
 
-  static const Color humidityCardStart = Color(0xFF90CAF9);
-  static const Color humidityCardEnd = Color(0xFF64B5F6);
+  // Card Accent Colors
+  static const Color tempAccent = Color(0xFFE55950);     // Coral Red
+  static const Color humidityAccent = Color(0xFF3B9AE1); // Sky Blue
+  static const Color soilAccent = Color(0xFF4CAF50);     // Fresh Green
+  static const Color lightAccent = Color(0xFFF5A623);    // Warm Amber/Orange
 
-  static const Color soilCardStart = Color(0xFFB7F5BE);
-  static const Color soilCardEnd = Color(0xFF8FE79A);
+  // Card Typography Colors
+  static const Color cardTitle = Color(0xFF6B7770);  // 13px w500 grey
+  static const Color cardValue = Color(0xFF1A241E);  // 28px w700 dark charcoal
+  static const Color cardTarget = Color(0xFF8C9690); // 11-12px w500 subtitle
 
-  static const Color lightCardStart = Color(0xFFFEE685);
-  static const Color lightCardEnd = Color(0xFFF5CF47);
+  // Status Badge Colors ("Norm")
+  static const Color badgeGreenBg = Color(0xFFE8F5E9);
+  static const Color badgeGreenText = Color(0xFF2E7D32);
 
-  // Condition Tiles
+  // Condition Tiles (Control Screen)
   static const Color conditionTileBg = Color(0xFFEDEDED);
   static const Color conditionBadgeBg = Color(0xFFDFE2E6);
 
-  // Text colors
-  static const Color textPrimary = Color(0xFF1A1A1A);
-  static const Color textSecondary = Color(0xFF555555);
-  static const Color textMuted = Color(0xFF888888);
+  // General text colors
+  static const Color textPrimary = Color(0xFF1A241E);
+  static const Color textSecondary = Color(0xFF6B7770);
+  static const Color textMuted = Color(0xFF8C9690);
 
   // Actuator Icons
-  static const Color waterBlue = Color(0xFF2196F3);
-  static const Color lightYellow = Color(0xFFFFB300);
-  static const Color fanGreen = Color(0xFF43A047);
+  static const Color waterBlue = Color(0xFF3B9AE1);
+  static const Color lightYellow = Color(0xFFF5A623);
+  static const Color fanGreen = Color(0xFF4CAF50);
 }

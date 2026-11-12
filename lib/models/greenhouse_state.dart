@@ -32,8 +32,8 @@ class GreenhouseController extends ChangeNotifier {
   Timer? _toastTimer;
 
   GreenhouseController() {
-    // Show toast for 4 seconds on initial startup matching Figma
-    _scheduleToastDismissal(duration: const Duration(seconds: 4));
+    // Show initial banner matching Figma on startup for 3 seconds
+    _scheduleToastDismissal(duration: const Duration(seconds: 3));
   }
 
   // Getters
@@ -71,28 +71,26 @@ class GreenhouseController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Toggle Actuators
+  // Toggle Actuators with universal floating notifications
   void toggleWatering(bool value) {
     _isWateringOn = value;
-    if (value) {
-      triggerToast('Watering successfully activated');
-    } else {
-      triggerToast('Watering deactivated');
-    }
+    triggerToast(value ? 'Watering successfully activated' : 'Watering deactivated');
     notifyListeners();
   }
 
   void toggleLighting(bool value) {
     _isLightingOn = value;
+    triggerToast(value ? 'Lighting successfully activated' : 'Lighting deactivated');
     notifyListeners();
   }
 
   void toggleVentilation(bool value) {
     _isVentilationOn = value;
+    triggerToast(value ? 'Ventilation successfully activated' : 'Ventilation deactivated');
     notifyListeners();
   }
 
-  // Toast banner trigger
+  // Toast banner trigger with immediate replacement & timer reset
   void triggerToast(String message) {
     _toastMessage = message;
     _isToastVisible = true;
@@ -106,7 +104,7 @@ class GreenhouseController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _scheduleToastDismissal({Duration duration = const Duration(seconds: 3)}) {
+  void _scheduleToastDismissal({Duration duration = const Duration(milliseconds: 2800)}) {
     _toastTimer?.cancel();
     _toastTimer = Timer(duration, () {
       _isToastVisible = false;
@@ -114,22 +112,26 @@ class GreenhouseController extends ChangeNotifier {
     });
   }
 
-  // Condition range updates
+  // Condition range updates with automatic arithmetic mean calculation:
+  // currentValue = ((min + max) / 2).round()
   void updateTemperatureRange(double min, double max) {
     _tempMin = min;
     _tempMax = max;
+    _temperature = ((min + max) / 2.0).roundToDouble();
     notifyListeners();
   }
 
   void updateHumidityRange(double min, double max) {
     _humidityMin = min;
     _humidityMax = max;
+    _humidity = ((min + max) / 2.0).roundToDouble();
     notifyListeners();
   }
 
   void updateSoilMoistureRange(double min, double max) {
     _soilMoistureMin = min;
     _soilMoistureMax = max;
+    _soilMoisture = ((min + max) / 2.0).roundToDouble();
     notifyListeners();
   }
 

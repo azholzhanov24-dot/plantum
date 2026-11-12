@@ -21,7 +21,9 @@ void main() {
 }
 
 class PlantumApp extends StatefulWidget {
-  const PlantumApp({super.key});
+  final GreenhouseController? controller;
+
+  const PlantumApp({super.key, this.controller});
 
   @override
   State<PlantumApp> createState() => _PlantumAppState();
@@ -33,12 +35,14 @@ class _PlantumAppState extends State<PlantumApp> {
   @override
   void initState() {
     super.initState();
-    _greenhouseController = GreenhouseController();
+    _greenhouseController = widget.controller ?? GreenhouseController();
   }
 
   @override
   void dispose() {
-    _greenhouseController.dispose();
+    if (widget.controller == null) {
+      _greenhouseController.dispose();
+    }
     super.dispose();
   }
 

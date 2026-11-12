@@ -5,11 +5,13 @@ import '../theme/app_colors.dart';
 class CustomFigmaSwitch extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
+  final Color? activeColor;
 
   const CustomFigmaSwitch({
     super.key,
     required this.value,
     required this.onChanged,
+    this.activeColor,
   });
 
   @override
@@ -18,36 +20,42 @@ class CustomFigmaSwitch extends StatelessWidget {
     const double height = 30.0;
     const double thumbSize = 22.0;
 
-    return GestureDetector(
-      onTap: () => onChanged(!value),
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeInOutCubic,
-        width: width,
-        height: height,
-        padding: const EdgeInsets.symmetric(horizontal: 4.0),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(height / 2),
-          color: value ? AppColors.switchActive : AppColors.switchInactive,
-        ),
-        child: AnimatedAlign(
+    return Focus(
+      canRequestFocus: false,
+      descendantsAreFocusable: false,
+      child: GestureDetector(
+        onTap: () => onChanged(!value),
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeInOutCubic,
-          alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            width: thumbSize,
-            height: thumbSize,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.switchThumb,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.18),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+          width: width,
+          height: height,
+          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(height / 2),
+            color: value
+                ? (activeColor ?? AppColors.navActiveGreen)
+                : AppColors.switchInactive,
+          ),
+          child: AnimatedAlign(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeInOutCubic,
+            alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+            child: Container(
+              width: thumbSize,
+              height: thumbSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.switchThumb,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.18),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

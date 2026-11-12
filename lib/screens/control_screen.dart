@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/greenhouse_state.dart';
 import '../theme/app_colors.dart';
 import '../widgets/condition_tile.dart';
+import '../widgets/confirm_toggle_dialog.dart';
 import '../widgets/control_toggle_tile.dart';
 
 /// Screen 2: Control Screen with 3D model viewport, actuator toggles, and target conditions.
@@ -56,36 +57,69 @@ class ControlScreen extends StatelessWidget {
                 ],
               ),
 
-              const SizedBox(height: 12.0),
+              const SizedBox(height: 8.0),
 
-              // Animated Toast / Status Banner
-              _buildToastNotification(controller),
+              // Animated Floating Toast / Status Banner
+              SizedBox(
+                height: 44.0,
+                child: _buildToastNotification(controller),
+              ),
 
-              const SizedBox(height: 12.0),
+              const SizedBox(height: 8.0),
 
               // 3D Model Viewport (Spline placeholder)
               _build3DViewport(controller),
 
               const SizedBox(height: 20.0),
 
-              // Actuators Section (Toggles)
+              // Actuators Section (Toggles with Confirmation Dialog)
               ControlToggleTile(
                 type: ActuatorType.watering,
                 title: 'Watering',
                 isEnabled: controller.isWateringOn,
-                onChanged: (val) => controller.toggleWatering(val),
+                onChanged: (val) async {
+                  final confirmed = await showToggleConfirmDialog(
+                    context: context,
+                    deviceName: 'Watering',
+                    turnOn: val,
+                    confirmColor: AppColors.waterBlue,
+                  );
+                  if (confirmed) {
+                    controller.toggleWatering(val);
+                  }
+                },
               ),
               ControlToggleTile(
                 type: ActuatorType.lighting,
                 title: 'Lighting',
                 isEnabled: controller.isLightingOn,
-                onChanged: (val) => controller.toggleLighting(val),
+                onChanged: (val) async {
+                  final confirmed = await showToggleConfirmDialog(
+                    context: context,
+                    deviceName: 'Lighting',
+                    turnOn: val,
+                    confirmColor: AppColors.lightYellow,
+                  );
+                  if (confirmed) {
+                    controller.toggleLighting(val);
+                  }
+                },
               ),
               ControlToggleTile(
                 type: ActuatorType.ventilation,
                 title: 'Ventilation',
                 isEnabled: controller.isVentilationOn,
-                onChanged: (val) => controller.toggleVentilation(val),
+                onChanged: (val) async {
+                  final confirmed = await showToggleConfirmDialog(
+                    context: context,
+                    deviceName: 'Ventilation',
+                    turnOn: val,
+                    confirmColor: AppColors.fanGreen,
+                  );
+                  if (confirmed) {
+                    controller.toggleVentilation(val);
+                  }
+                },
               ),
 
               const SizedBox(height: 14.0),
@@ -167,50 +201,68 @@ class ControlScreen extends StatelessWidget {
   }
 
   Widget _buildToastNotification(GreenhouseController controller) {
-    return AnimatedCrossFade(
-      duration: const Duration(milliseconds: 300),
-      crossFadeState: controller.isToastVisible
-          ? CrossFadeState.showFirst
-          : CrossFadeState.showSecond,
-      firstChild: Center(
-        child: GestureDetector(
-          onTap: () => controller.hideToast(),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10.0),
-            decoration: BoxDecoration(
-              color: AppColors.toastGreen,
-              borderRadius: BorderRadius.circular(24.0),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.toastGreen.withValues(alpha: 0.4),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
+    return AnimatedSlide(
+      offset: controller.isToastVisible ? Offset.zero : const Offset(0, -0.35),
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      child: AnimatedOpacity(
+        opacity: controller.isToastVisible ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeInOut,
+        child: IgnorePointer(
+          ignoring: !controller.isToastVisible,
+          child: Center(
+            child: GestureDetector(
+              onTap: () => controller.hideToast(),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10.0),
+                decoration: BoxDecoration(
+                  color: AppColors.toastGreen,
+                  borderRadius: BorderRadius.circular(24.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.toastGreen.withValues(alpha: 0.38),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.check_circle_rounded,
-                  color: AppColors.toastText,
-                  size: 18.0,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      color: AppColors.toastText,
+                      size: 18.0,
+                    ),
+                    const SizedBox(width: 8.0),
+                    Flexible(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 180),
+                        transitionBuilder: (child, animation) => FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        ),
+                        child: Text(
+                          controller.toastMessage,
+                          key: ValueKey<String>(controller.toastMessage),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.toastText,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8.0),
-                Text(
-                  controller.toastMessage,
-                  style: const TextStyle(
-                    fontSize: 13.0,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.toastText,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
       ),
-      secondChild: const SizedBox(width: double.infinity, height: 0),
     );
   }
 

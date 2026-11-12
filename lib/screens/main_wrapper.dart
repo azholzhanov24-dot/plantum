@@ -118,21 +118,24 @@ class _MainWrapperState extends State<MainWrapper> {
       child: InkWell(
         onTap: () => _onTabTapped(index),
         borderRadius: BorderRadius.circular(20.0),
+        canRequestFocus: false,
+        focusColor: Colors.transparent,
+        hoverColor: Colors.black.withValues(alpha: 0.03),
         splashColor: AppColors.navActiveGreen.withValues(alpha: 0.12),
         highlightColor: Colors.transparent,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+          padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 8.0),
           decoration: BoxDecoration(
             color: isSelected
-                ? AppColors.navActiveGreen.withValues(alpha: 0.08)
+                ? const Color(0xFFE8F5E9)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(20.0),
+            borderRadius: BorderRadius.circular(16.0),
           ),
           child: Icon(
             isSelected ? activeIcon : icon,
-            size: 28.0,
-            color: isSelected ? AppColors.navActiveGreen : Colors.black87,
+            size: 26.0,
+            color: isSelected ? const Color(0xFF2E7D32) : const Color(0xFF333E37),
           ),
         ),
       ),
@@ -170,7 +173,7 @@ class _MainWrapperState extends State<MainWrapper> {
             subtitle: 'Greenhouse maintained 24°C target condition',
             time: '1h ago',
             icon: Icons.thermostat_rounded,
-            iconColor: AppColors.tempCardEnd,
+            iconColor: AppColors.tempAccent,
           ),
           _buildNotificationItem(
             title: 'Ventilation active',
@@ -324,9 +327,9 @@ class _MainWrapperState extends State<MainWrapper> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildHistoryStat('Avg Temp', '23.8 °C', AppColors.tempCardEnd),
-                    _buildHistoryStat('Avg Humidity', '76 %', AppColors.humidityCardEnd),
-                    _buildHistoryStat('Avg Moisture', '68 %', AppColors.soilCardEnd),
+                    _buildHistoryStat('Avg Temp', '23.8 °C', AppColors.tempAccent),
+                    _buildHistoryStat('Avg Humidity', '76 %', AppColors.humidityAccent),
+                    _buildHistoryStat('Avg Moisture', '68 %', AppColors.soilAccent),
                   ],
                 ),
                 const SizedBox(height: 20.0),

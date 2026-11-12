@@ -23,68 +23,93 @@ class ControlToggleTile extends StatelessWidget {
     required this.onChanged,
   });
 
+  Color _getActuatorColor() {
+    switch (type) {
+      case ActuatorType.watering:
+        return AppColors.waterBlue; // #3B9AE1
+      case ActuatorType.lighting:
+        return AppColors.lightYellow; // #F5A623
+      case ActuatorType.ventilation:
+        return AppColors.fanGreen; // #4CAF50
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12.0),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF0F1F1),
-        borderRadius: BorderRadius.circular(28.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(28.0),
-          onTap: () => onChanged(!isEnabled),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-            child: Row(
-              children: [
-                // Icon
-                _buildLeadingIcon(),
-                const SizedBox(width: 16.0),
+    final activeColor = _getActuatorColor();
 
-                // Title & Subtitle
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.2,
+    return Material(
+      color: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      borderRadius: BorderRadius.circular(24.0),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12.0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24.0),
+          border: Border.all(color: AppColors.cardBorder, width: 1.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(24.0),
+            canRequestFocus: false,
+            focusColor: Colors.transparent,
+            hoverColor: Colors.black.withValues(alpha: 0.03),
+            onTap: () => onChanged(!isEnabled),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: Row(
+                children: [
+                  // Icon
+                  _buildLeadingIcon(),
+                  const SizedBox(width: 16.0),
+
+                  // Title & Subtitle
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                            letterSpacing: -0.2,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2.0),
-                      Text(
-                        isEnabled ? 'On' : 'Off',
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textMuted,
+                        const SizedBox(height: 2.0),
+                        Text(
+                          isEnabled ? 'On' : 'Off',
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textMuted,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
 
-                // Switch
-                CustomFigmaSwitch(
-                  value: isEnabled,
-                  onChanged: onChanged,
-                ),
-              ],
+                  // Switch with custom actuator color
+                  CustomFigmaSwitch(
+                    value: isEnabled,
+                    onChanged: onChanged,
+                    activeColor: activeColor,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/greenhouse_state.dart';
 import '../theme/app_colors.dart';
+import '../widgets/confirm_toggle_dialog.dart';
 import '../widgets/sensor_card.dart';
 
 /// Screen 1: Home Dashboard displaying greenhouse live metrics and photo banner.
@@ -16,17 +17,27 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = GreenhouseScope.of(context);
 
+    // Direct dynamic progress calculations based on real sensor numbers
+    // 1. Temperature: base scale 0–50°C
+    final tempProgress = (controller.temperature / 50.0).clamp(0.0, 1.0);
+
+    // 2. Humidity: direct percentage 0–100%
+    final humidityProgress = (controller.humidity / 100.0).clamp(0.0, 1.0);
+
+    // 3. Soil moisture: direct percentage 0–100%
+    final soilProgress = (controller.soilMoisture / 100.0).clamp(0.0, 1.0);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 12.0),
+              const SizedBox(height: 10.0),
 
               // Top Bar: Brand Logo & Settings Icon
               Row(
@@ -43,14 +54,14 @@ class HomeScreen extends StatelessWidget {
                         child: const Icon(
                           Icons.eco_rounded,
                           color: AppColors.brandIconGreen,
-                          size: 30.0,
+                          size: 26.0,
                         ),
                       ),
                       const SizedBox(width: 10.0),
                       const Text(
                         'Plantum',
                         style: TextStyle(
-                          fontSize: 26.0,
+                          fontSize: 24.0,
                           fontWeight: FontWeight.w800,
                           color: AppColors.brandGreen,
                           letterSpacing: -0.6,
@@ -58,85 +69,122 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.settings_outlined,
-                      color: AppColors.textPrimary,
-                      size: 26.0,
+                  Container(
+                    width: 40.0,
+                    height: 40.0,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.cardBorder, width: 1.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    splashRadius: 24.0,
-                    onPressed: () {
-                      _showSettingsDialog(context);
-                    },
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.settings_outlined,
+                        color: AppColors.textPrimary,
+                        size: 20.0,
+                      ),
+                      splashRadius: 20.0,
+                      padding: EdgeInsets.zero,
+                      onPressed: () {
+                        _showSettingsDialog(context);
+                      },
+                    ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 18.0),
+              const SizedBox(height: 14.0),
 
               // Greenhouse Photo Banner
               _buildGreenhouseBanner(context),
 
-              const SizedBox(height: 22.0),
+              const SizedBox(height: 14.0),
 
-              // 2x2 Sensor Grid
+              // 2x2 Modern White Sensor Grid
               GridView.count(
                 crossAxisCount: 2,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                crossAxisSpacing: 16.0,
-                mainAxisSpacing: 16.0,
-                childAspectRatio: 1.15,
+                crossAxisSpacing: 12.0,
+                mainAxisSpacing: 12.0,
+                childAspectRatio: 0.88,
                 children: [
-                  // 1. Temperature Card
+                  // 1. Temperature Card (0-50°C scale)
                   SensorCard(
-                    type: SensorType.temperature,
                     title: 'Temperature',
                     value: '${controller.temperature.round()}°C',
-                    rangeOrMode: '(${controller.tempRangeText})',
-                    gradientStart: AppColors.tempCardStart,
-                    gradientEnd: AppColors.tempCardEnd,
+                    subtitle: 'Target: ${controller.tempMin.round()}–${controller.tempMax.round()}°C',
+                    icon: Icons.thermostat_rounded,
+                    accentColor: AppColors.tempAccent,
+                    progress: tempProgress,
                     onTap: onNavigateToControl,
                   ),
 
-                  // 2. Humidity Card
+                  // 2. Humidity Card (0-100% scale)
                   SensorCard(
-                    type: SensorType.humidity,
                     title: 'Humidity',
                     value: '${controller.humidity.round()}%',
-                    rangeOrMode: '(${controller.humidityRangeText})',
-                    gradientStart: AppColors.humidityCardStart,
-                    gradientEnd: AppColors.humidityCardEnd,
+                    subtitle: 'Target: ${controller.humidityMin.round()}–${controller.humidityMax.round()}%',
+                    icon: Icons.water_drop_rounded,
+                    accentColor: AppColors.humidityAccent,
+                    progress: humidityProgress,
                     onTap: onNavigateToControl,
                   ),
 
-                  // 3. Soil Moisture Card
+                  // 3. Soil Moisture Card (0-100% scale)
                   SensorCard(
-                    type: SensorType.soilMoisture,
-                    title: 'Soil\nmoisture',
+                    title: 'Soil moisture',
                     value: '${controller.soilMoisture.round()}%',
-                    rangeOrMode: '(${controller.soilMoistureRangeText})',
-                    gradientStart: AppColors.soilCardStart,
-                    gradientEnd: AppColors.soilCardEnd,
+                    subtitle: 'Target: ${controller.soilMoistureMin.round()}–${controller.soilMoistureMax.round()}%',
+                    icon: Icons.grass_rounded,
+                    accentColor: AppColors.soilAccent,
+                    progress: soilProgress,
                     onTap: onNavigateToControl,
                   ),
 
-                  // 4. Light Card
+                  // 4. Grow Light Card (Confirmation dialog before toggle)
                   SensorCard(
-                    type: SensorType.light,
-                    title: 'Light',
+                    title: 'Grow Light',
                     value: controller.isLightingOn ? 'ON' : 'OFF',
-                    rangeOrMode: controller.isLightingOn ? '(Manual mode)' : '(Standby)',
-                    gradientStart: AppColors.lightCardStart,
-                    gradientEnd: AppColors.lightCardEnd,
-                    onTap: () {
-                      controller.toggleLighting(!controller.isLightingOn);
+                    subtitle: 'Manual mode',
+                    icon: Icons.wb_sunny_rounded,
+                    accentColor: AppColors.lightAccent,
+                    isSwitch: true,
+                    switchValue: controller.isLightingOn,
+                    onToggle: (_) async {
+                      final confirmed = await showToggleConfirmDialog(
+                        context: context,
+                        deviceName: 'Grow Light',
+                        turnOn: !controller.isLightingOn,
+                        confirmColor: AppColors.lightAccent,
+                      );
+                      if (confirmed) {
+                        controller.toggleLighting(!controller.isLightingOn);
+                      }
+                    },
+                    onTap: () async {
+                      final confirmed = await showToggleConfirmDialog(
+                        context: context,
+                        deviceName: 'Grow Light',
+                        turnOn: !controller.isLightingOn,
+                        confirmColor: AppColors.lightAccent,
+                      );
+                      if (confirmed) {
+                        controller.toggleLighting(!controller.isLightingOn);
+                      }
                     },
                   ),
                 ],
               ),
 
-              const SizedBox(height: 100.0), // Padding above bottom navigation bar
+              const SizedBox(height: 24.0), // Padding above bottom navigation bar
             ],
           ),
         ),
@@ -146,7 +194,7 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildGreenhouseBanner(BuildContext context) {
     return Container(
-      height: 185.0,
+      height: 170.0,
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24.0),
