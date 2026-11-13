@@ -16,13 +16,9 @@ class ConditionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      borderRadius: BorderRadius.circular(24.0),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10.0),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 10.0),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24.0),
@@ -38,6 +34,7 @@ class ConditionTile extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           surfaceTintColor: Colors.transparent,
+          borderRadius: BorderRadius.circular(24.0),
           child: InkWell(
             borderRadius: BorderRadius.circular(24.0),
             canRequestFocus: false,

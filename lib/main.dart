@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'models/greenhouse_state.dart';
-import 'screens/main_wrapper.dart';
+import 'screens/auth/sign_up_screen.dart';
 import 'theme/app_colors.dart';
 
 void main() {
@@ -22,8 +22,9 @@ void main() {
 
 class PlantumApp extends StatefulWidget {
   final GreenhouseController? controller;
+  final Widget? home;
 
-  const PlantumApp({super.key, this.controller});
+  const PlantumApp({super.key, this.controller, this.home});
 
   @override
   State<PlantumApp> createState() => _PlantumAppState();
@@ -68,7 +69,7 @@ class _PlantumAppState extends State<PlantumApp> {
           ),
           fontFamily: 'Roboto',
         ),
-        home: const MainWrapper(),
+        home: widget.home ?? const SignUpScreen(),
       ),
     );
   }

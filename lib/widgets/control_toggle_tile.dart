@@ -38,13 +38,9 @@ class ControlToggleTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final activeColor = _getActuatorColor();
 
-    return Material(
-      color: Colors.white,
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      borderRadius: BorderRadius.circular(24.0),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12.0),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24.0),
@@ -60,6 +56,7 @@ class ControlToggleTile extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           surfaceTintColor: Colors.transparent,
+          borderRadius: BorderRadius.circular(24.0),
           child: InkWell(
             borderRadius: BorderRadius.circular(24.0),
             canRequestFocus: false,

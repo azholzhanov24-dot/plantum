@@ -30,36 +30,32 @@ class SensorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      borderRadius: BorderRadius.circular(24.0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24.0),
+        border: Border.all(color: AppColors.cardBorder, width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.035),
+            blurRadius: 12.0,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        borderRadius: BorderRadius.circular(24.0),
+        child: InkWell(
           borderRadius: BorderRadius.circular(24.0),
-          border: Border.all(color: AppColors.cardBorder, width: 1.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.035),
-              blurRadius: 12.0,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(24.0),
-            canRequestFocus: false,
-            focusColor: Colors.transparent,
-            hoverColor: Colors.black.withValues(alpha: 0.03),
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
+          canRequestFocus: false,
+          focusColor: Colors.transparent,
+          hoverColor: Colors.black.withValues(alpha: 0.03),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -160,8 +156,7 @@ class SensorCard extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildNormBadge() {

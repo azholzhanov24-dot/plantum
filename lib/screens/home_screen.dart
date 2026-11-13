@@ -3,6 +3,7 @@ import '../models/greenhouse_state.dart';
 import '../theme/app_colors.dart';
 import '../widgets/confirm_toggle_dialog.dart';
 import '../widgets/sensor_card.dart';
+import 'auth/sign_in_screen.dart';
 
 /// Screen 1: Home Dashboard displaying greenhouse live metrics and photo banner.
 class HomeScreen extends StatelessWidget {
@@ -193,6 +194,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildGreenhouseBanner(BuildContext context) {
+    final controller = GreenhouseScope.of(context);
     return Container(
       height: 170.0,
       width: double.infinity,
@@ -277,9 +279,9 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    const Text(
-                      'Live • GreenHouse 1',
-                      style: TextStyle(
+                    Text(
+                      'Live • ${controller.greenhouseName}',
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,
@@ -296,18 +298,69 @@ class HomeScreen extends StatelessWidget {
   }
 
   void _showSettingsDialog(BuildContext context) {
+    final controller = GreenhouseScope.of(context);
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Greenhouse Settings'),
-        content: const Text(
-          'Plantum Smart Greenhouse v1.0.0\nAutomatic climate control is running smoothly.',
+        title: const Row(
+          children: [
+            Icon(Icons.settings_outlined, color: AppColors.brandIconGreen, size: 22),
+            SizedBox(width: 8),
+            Text('Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              controller.greenhouseName,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Area: ${controller.greenhouseArea.toStringAsFixed(0)} m²',
+              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            ),
+            Text(
+              'Location: ${controller.greenhouseAddress}',
+              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 12),
+            const Divider(),
+            const SizedBox(height: 8),
+            const Text(
+              'Plantum Smart Greenhouse v1.0.0\nAutomatic climate control is running smoothly.',
+              style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+            ),
+          ],
         ),
         actions: [
-          TextButton(
+          TextButton.icon(
+            icon: const Icon(Icons.logout_rounded, size: 18, color: AppColors.tempAccent),
+            label: const Text('Log out', style: TextStyle(color: AppColors.tempAccent, fontWeight: FontWeight.w600)),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              controller.clearUser();
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const SignInScreen()),
+                (route) => false,
+              );
+            },
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.authGreen,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('OK', style: TextStyle(color: AppColors.brandIconGreen)),
+            child: const Text('Close'),
           ),
         ],
       ),

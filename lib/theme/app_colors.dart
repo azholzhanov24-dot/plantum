@@ -59,4 +59,15 @@ class AppColors {
   static const Color waterBlue = Color(0xFF3B9AE1);
   static const Color lightYellow = Color(0xFFF5A623);
   static const Color fanGreen = Color(0xFF4CAF50);
+
+  // Auth & Setup Screen Theme (#F9FAF8 warm palette from mockup)
+  static const Color authBackground = Color(0xFFF9FAF8);
+  static const Color authInput = Color(0xFFF1F3F0);
+  static const Color authInputHover = Color(0xFFEAECE8);
+  static const Color authGreen = Color(0xFF388E3C);
+  static const Color authGreenHover = Color(0xFF2E7D32);
+  static const Color authGreenSoft = Color(0xFFE8F3E8);
+  static const Color authText = Color(0xFF1C241D);
+  static const Color authMuted = Color(0xFF687369);
+  static const Color authPlaceholder = Color(0xFF8A948B);
 }

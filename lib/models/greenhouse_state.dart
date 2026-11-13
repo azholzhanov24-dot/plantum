@@ -31,6 +31,17 @@ class GreenhouseController extends ChangeNotifier {
   String _toastMessage = 'Watering successfully activated';
   Timer? _toastTimer;
 
+  // Greenhouse metadata (from Deploy / Setup)
+  String _greenhouseName = 'GreenHouse 1';
+  double _greenhouseArea = 24.0;
+  String _greenhouseAddress = 'Atyrau, Satpayev Ave';
+  double _greenhouseLatitude = 47.1067;
+  double _greenhouseLongitude = 51.9167;
+
+  // Registered user info (Client mock)
+  String? _username;
+  String? _email;
+
   GreenhouseController() {
     // Show initial banner matching Figma on startup for 3 seconds
     _scheduleToastDismissal(duration: const Duration(seconds: 3));
@@ -58,6 +69,14 @@ class GreenhouseController extends ChangeNotifier {
 
   bool get isToastVisible => _isToastVisible;
   String get toastMessage => _toastMessage;
+
+  String get greenhouseName => _greenhouseName;
+  double get greenhouseArea => _greenhouseArea;
+  String get greenhouseAddress => _greenhouseAddress;
+  double get greenhouseLatitude => _greenhouseLatitude;
+  double get greenhouseLongitude => _greenhouseLongitude;
+  String? get username => _username;
+  String? get email => _email;
 
   String get tempRangeText => '${_tempMin.round()}-${_tempMax.round()}°C';
   String get humidityRangeText => '${_humidityMin.round()}-${_humidityMax.round()}%';
@@ -132,6 +151,45 @@ class GreenhouseController extends ChangeNotifier {
     _soilMoistureMin = min;
     _soilMoistureMax = max;
     _soilMoisture = ((min + max) / 2.0).roundToDouble();
+    notifyListeners();
+  }
+
+  // User authentication info (local client mock)
+  void setUser({required String username, required String email}) {
+    _username = username.trim();
+    _email = email.trim();
+    notifyListeners();
+  }
+
+  void clearUser() {
+    _username = null;
+    _email = null;
+    notifyListeners();
+  }
+
+  // Greenhouse setup / deployment
+  void updateGreenhouseDetails({
+    required String name,
+    double? area,
+    String? address,
+    double? latitude,
+    double? longitude,
+  }) {
+    if (name.trim().isNotEmpty) {
+      _greenhouseName = name.trim();
+    }
+    if (area != null && area > 0) {
+      _greenhouseArea = area;
+    }
+    if (address != null && address.trim().isNotEmpty) {
+      _greenhouseAddress = address.trim();
+    }
+    if (latitude != null) {
+      _greenhouseLatitude = latitude;
+    }
+    if (longitude != null) {
+      _greenhouseLongitude = longitude;
+    }
     notifyListeners();
   }
 

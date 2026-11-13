@@ -156,7 +156,7 @@ class ControlScreen extends StatelessWidget {
                 },
               ),
               ConditionTile(
-                label: 'Humadity',
+                label: 'Humidity',
                 valueText: '${controller.humidityMin.round()}-${controller.humidityMax.round()} %',
                 onTap: () {
                   showConditionEditorSheet(

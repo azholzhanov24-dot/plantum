@@ -2,10 +2,48 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:plantum/main.dart';
 import 'package:plantum/models/greenhouse_state.dart';
+import 'package:plantum/screens/main_wrapper.dart';
 
 void main() {
-  testWidgets('Plantum app loads and displays home dashboard', (WidgetTester tester) async {
+  testWidgets('Plantum app starts on SignUpScreen by default and can switch to SignInScreen',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
     await tester.pumpWidget(const PlantumApp());
+    await tester.pumpAndSettle();
+
+    // Verify Brand & SignUp header
+    expect(find.text('Plantum'), findsOneWidget);
+    expect(find.text('Create your account'), findsOneWidget);
+    expect(find.text('Username'), findsOneWidget);
+    expect(find.text('Email'), findsOneWidget);
+    expect(find.text('Password'), findsOneWidget);
+    expect(find.text('Sign up'), findsOneWidget);
+
+    // Switch to Sign in
+    await tester.tap(find.text('Sign in'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.text('Forgot password?'), findsOneWidget);
+    expect(find.text('Sign in'), findsOneWidget);
+  });
+
+  testWidgets('Plantum dashboard displays sensors when loaded with MainWrapper',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(const PlantumApp(home: MainWrapper()));
     await tester.pumpAndSettle();
 
     // Verify brand title is displayed
@@ -83,7 +121,7 @@ void main() {
 
     final controller = GreenhouseController();
 
-    await tester.pumpWidget(PlantumApp(controller: controller));
+    await tester.pumpWidget(PlantumApp(controller: controller, home: const MainWrapper()));
     await tester.pumpAndSettle();
 
     // Update ranges
@@ -120,7 +158,7 @@ void main() {
 
     final controller = GreenhouseController();
 
-    await tester.pumpWidget(PlantumApp(controller: controller));
+    await tester.pumpWidget(PlantumApp(controller: controller, home: const MainWrapper()));
     await tester.pumpAndSettle();
 
     // 1. Initially ON
@@ -181,7 +219,7 @@ void main() {
 
     final controller = GreenhouseController();
 
-    await tester.pumpWidget(PlantumApp(controller: controller));
+    await tester.pumpWidget(PlantumApp(controller: controller, home: const MainWrapper()));
     await tester.pumpAndSettle();
 
     // Navigate to Control screen (index 1)
@@ -225,6 +263,49 @@ void main() {
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
     expect(controller.isWateringOn, true);
+
+    // Flush any pending toast timers
+    await tester.pump(const Duration(seconds: 4));
+  });
+
+  testWidgets('Settings dialog displays greenhouse info and Log out button',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final controller = GreenhouseController();
+    controller.updateGreenhouseDetails(
+      name: 'Tomato Palace',
+      area: 36,
+      address: 'Atyrau, Kazakhstan',
+    );
+
+    await tester.pumpWidget(PlantumApp(controller: controller, home: const MainWrapper()));
+    await tester.pumpAndSettle();
+
+    // Verify name on Live banner
+    expect(find.text('Live • Tomato Palace'), findsOneWidget);
+
+    // Tap Settings gear
+    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.pumpAndSettle();
+
+    // Settings dialog is open
+    expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('Tomato Palace'), findsOneWidget);
+    expect(find.text('Area: 36 m²'), findsOneWidget);
+    expect(find.text('Log out'), findsOneWidget);
+
+    // Tap Log out -> returns to SignInScreen
+    await tester.tap(find.text('Log out'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.text('Sign in'), findsOneWidget);
 
     // Flush any pending toast timers
     await tester.pump(const Duration(seconds: 4));
