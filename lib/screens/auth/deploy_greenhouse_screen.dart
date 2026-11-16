@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import '../../models/greenhouse_state.dart';
+import '../../services/supabase_service.dart';
 import '../../theme/app_colors.dart';
 import '../main_wrapper.dart';
 
@@ -27,6 +28,7 @@ class _DeployGreenhouseScreenState extends State<DeployGreenhouseScreen> {
   // Default coordinates: Atyrau, Kazakhstan
   LatLng _pinnedLocation = const LatLng(47.1067, 51.9167);
   bool _isSearching = false;
+  bool _isDeploying = false;
   String _mapStatusText = 'OpenStreetMap';
 
   @override
@@ -98,51 +100,80 @@ class _DeployGreenhouseScreenState extends State<DeployGreenhouseScreen> {
     }
   }
 
-  void _handleDeploy() {
+  Future<void> _handleDeploy() async {
     if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isDeploying = true);
 
     final name = _nameController.text.trim().isEmpty ? 'My Backyard House' : _nameController.text.trim();
     final area = double.tryParse(_areaController.text.trim()) ?? 24.0;
     final address = _addressController.text.trim();
 
-    // Persist to GreenhouseController
     try {
-      final controller = GreenhouseScope.of(context);
-      controller.updateGreenhouseDetails(
-        name: name,
-        area: area,
-        address: address,
-        latitude: _pinnedLocation.latitude,
-        longitude: _pinnedLocation.longitude,
-      );
-    } catch (_) {
-      // Ignored outside GreenhouseScope
-    }
+      if (SupabaseService.isInitialized) {
+        await SupabaseService.createGreenhouse(
+          name: name,
+          area: area,
+          address: address,
+          latitude: _pinnedLocation.latitude,
+          longitude: _pinnedLocation.longitude,
+        );
+      }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '"$name" ($area m²) pinned & ready!',
-          style: const TextStyle(
-            color: AppColors.authGreen,
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
+      if (mounted) {
+        // Persist to GreenhouseController
+        try {
+          final controller = GreenhouseScope.of(context);
+          controller.updateGreenhouseDetails(
+            name: name,
+            area: area,
+            address: address,
+            latitude: _pinnedLocation.latitude,
+            longitude: _pinnedLocation.longitude,
+          );
+        } catch (_) {}
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '"$name" ($area m²) saved to Supabase & ready!',
+              style: const TextStyle(
+                color: AppColors.authGreen,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+            backgroundColor: AppColors.authGreenSoft,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            duration: const Duration(seconds: 2),
           ),
-        ),
-        backgroundColor: AppColors.authGreenSoft,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+        );
 
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const MainWrapper()),
-        (route) => false,
-      );
-    });
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const MainWrapper()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Could not save greenhouse: $e',
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+            ),
+            backgroundColor: AppColors.tempAccent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isDeploying = false);
+      }
+    }
   }
 
   Widget _buildPinMarker() {
@@ -589,7 +620,7 @@ class _DeployGreenhouseScreenState extends State<DeployGreenhouseScreen> {
                     SizedBox(
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: _handleDeploy,
+                        onPressed: _isDeploying ? null : _handleDeploy,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.authGreen,
                           foregroundColor: Colors.white,
@@ -598,14 +629,23 @@ class _DeployGreenhouseScreenState extends State<DeployGreenhouseScreen> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        child: const Text(
-                          'Create Greenhouse',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
+                        child: _isDeploying
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                'Create Greenhouse',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
                       ),
                     ),
 

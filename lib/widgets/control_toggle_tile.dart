@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_strings.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import 'custom_figma_switch.dart';
 
 enum ActuatorType {
@@ -42,12 +44,12 @@ class ControlToggleTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.surfaceColor,
           borderRadius: BorderRadius.circular(24.0),
-          border: Border.all(color: AppColors.cardBorder, width: 1.0),
+          border: Border.all(color: context.dividerLineColor, width: 1.0),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
+              color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.03),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -79,20 +81,20 @@ class ControlToggleTile extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16.0,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: context.textPrimaryColor,
                             letterSpacing: -0.2,
                           ),
                         ),
                         const SizedBox(height: 2.0),
                         Text(
-                          isEnabled ? 'On' : 'Off',
-                          style: const TextStyle(
+                          isEnabled ? context.strings.on : context.strings.off,
+                          style: TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w500,
-                            color: AppColors.textMuted,
+                            color: context.textSecondaryColor,
                           ),
                         ),
                       ],

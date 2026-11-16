@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../l10n/app_strings.dart';
 import '../../models/greenhouse_state.dart';
+import '../../services/supabase_service.dart';
 import '../../theme/app_colors.dart';
 import 'deploy_greenhouse_screen.dart';
 import 'sign_in_screen.dart';
@@ -29,54 +32,104 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
-  void _handleSignUp() {
+  Future<void> _handleSignUp() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
-    // Save mock user in GreenhouseController if available
+    final username = _usernameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
     try {
-      final controller = GreenhouseScope.of(context);
-      controller.setUser(
-        username: _usernameController.text.trim(),
-        email: _emailController.text.trim(),
-      );
-    } catch (_) {
-      // Ignored if outside of GreenhouseScope in simple widget tests
-    }
+      if (SupabaseService.isInitialized) {
+        await SupabaseService.signUp(
+          email: email,
+          password: password,
+          username: username,
+        );
+      }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          children: [
-            Icon(Icons.check_circle_rounded, color: AppColors.authGreen, size: 18),
-            SizedBox(width: 8),
-            Text(
-              'Account created! Proceeding to setup...',
-              style: TextStyle(
-                color: AppColors.authGreen,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
+      // Save user in GreenhouseController if available
+      if (mounted) {
+        try {
+          final controller = GreenhouseScope.of(context);
+          controller.setUser(
+            username: username,
+            email: email,
+          );
+        } catch (_) {}
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle_rounded, color: AppColors.authGreen, size: 18),
+                SizedBox(width: 8),
+                Text(
+                  'Account created! Proceeding to setup...',
+                  style: TextStyle(
+                    color: AppColors.authGreen,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-        backgroundColor: AppColors.authGreenSoft,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        duration: const Duration(milliseconds: 1400),
-      ),
-    );
+            backgroundColor: AppColors.authGreenSoft,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            duration: const Duration(milliseconds: 1400),
+          ),
+        );
 
-    Future.delayed(const Duration(milliseconds: 350), () {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => const DeployGreenhouseScreen(),
-        ),
-      );
-    });
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const DeployGreenhouseScreen(),
+          ),
+        );
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline_rounded, color: Colors.white, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    e.message,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.tempAccent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Sign up failed: $e',
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+            ),
+            backgroundColor: AppColors.tempAccent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -129,9 +182,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     const SizedBox(height: 28),
 
                     // Heading
-                    const Text(
-                      'Create your account',
-                      style: TextStyle(
+                    Text(
+                      context.strings.createAccount,
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: AppColors.authText,
@@ -151,9 +204,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     const SizedBox(height: 24),
 
                     // Field 1: Username
-                    const Text(
-                      'Username',
-                      style: TextStyle(
+                    Text(
+                      context.strings.username,
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: AppColors.authMuted,
@@ -200,9 +253,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     const SizedBox(height: 16),
 
                     // Field 2: Email
-                    const Text(
-                      'Email',
-                      style: TextStyle(
+                    Text(
+                      context.strings.email,
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: AppColors.authMuted,
@@ -253,9 +306,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     const SizedBox(height: 16),
 
                     // Field 3: Password
-                    const Text(
-                      'Password',
-                      style: TextStyle(
+                    Text(
+                      context.strings.password,
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: AppColors.authMuted,
@@ -338,9 +391,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text(
-                                'Sign up',
-                                style: TextStyle(
+                            : Text(
+                                context.strings.signUp,
+                                style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.white,
@@ -357,9 +410,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         alignment: WrapAlignment.center,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          const Text(
-                            'Already have an account? ',
-                            style: TextStyle(
+                          Text(
+                            context.strings.alreadyHaveAccount,
+                            style: const TextStyle(
                               fontSize: 13,
                               color: AppColors.authMuted,
                             ),
@@ -372,9 +425,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 ),
                               );
                             },
-                            child: const Text(
-                              'Sign in',
-                              style: TextStyle(
+                            child: Text(
+                              context.strings.signIn,
+                              style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.authGreen,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
+import '../l10n/app_strings.dart';
+import '../theme/app_theme.dart';
 
 /// Condition capsule tile widget matching Figma's "Set your conditions" rows.
 class ConditionTile extends StatelessWidget {
@@ -20,12 +21,12 @@ class ConditionTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10.0),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.surfaceColor,
           borderRadius: BorderRadius.circular(24.0),
-          border: Border.all(color: AppColors.cardBorder, width: 1.0),
+          border: Border.all(color: context.dividerLineColor, width: 1.0),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
+              color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.02),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -47,21 +48,24 @@ class ConditionTile extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // Label
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 15.0,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                      letterSpacing: -0.2,
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 15.0,
+                        fontWeight: FontWeight.w600,
+                        color: context.textPrimaryColor,
+                        letterSpacing: -0.2,
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 10.0),
 
                   // Range Badge with arrow
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 7.0),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFDFE2E6),
+                      color: context.subtleSurfaceColor,
                       borderRadius: BorderRadius.circular(16.0),
                     ),
                     child: Row(
@@ -69,19 +73,19 @@ class ConditionTile extends StatelessWidget {
                       children: [
                         Text(
                           valueText,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13.0,
                             fontWeight: FontWeight.w500,
-                            color: Color(0xFF4A4A4A),
+                            color: context.textPrimaryColor,
                           ),
                         ),
                         const SizedBox(width: 8.0),
-                        const Text(
+                        Text(
                           '>',
                           style: TextStyle(
                             fontSize: 13.0,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF6B7280),
+                            color: context.textSecondaryColor,
                           ),
                         ),
                       ],
@@ -162,9 +166,9 @@ class _ConditionEditorDialogState extends State<_ConditionEditorDialog> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: context.surfaceColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -176,7 +180,7 @@ class _ConditionEditorDialogState extends State<_ConditionEditorDialog> {
               width: 44,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: context.textSecondaryColor.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -184,19 +188,19 @@ class _ConditionEditorDialogState extends State<_ConditionEditorDialog> {
           const SizedBox(height: 18),
 
           Text(
-            'Adjust ${widget.title}',
-            style: const TextStyle(
+            context.strings.adjustCondition(widget.title),
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: context.textPrimaryColor,
             ),
           ),
           const SizedBox(height: 6),
           Text(
-            'Target range will be maintained automatically by actuators.',
+            context.strings.conditionHelper,
             style: TextStyle(
               fontSize: 13,
-              color: Colors.grey.shade600,
+              color: context.textSecondaryColor,
             ),
           ),
           const SizedBox(height: 24),
@@ -206,16 +210,16 @@ class _ConditionEditorDialogState extends State<_ConditionEditorDialog> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.background,
+                color: context.subtleSurfaceColor,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(color: context.dividerLineColor),
               ),
               child: Text(
                 '${_values.start.round()} - ${_values.end.round()} ${widget.unit}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.navActiveGreen,
+                  color: context.brandGreenColor,
                 ),
               ),
             ),
@@ -228,8 +232,8 @@ class _ConditionEditorDialogState extends State<_ConditionEditorDialog> {
             min: widget.absoluteMin,
             max: widget.absoluteMax,
             divisions: (widget.absoluteMax - widget.absoluteMin).toInt(),
-            activeColor: AppColors.navActiveGreen,
-            inactiveColor: Colors.grey.shade200,
+            activeColor: context.brandGreenColor,
+            inactiveColor: context.subtleSurfaceColor,
             labels: RangeLabels(
               '${_values.start.round()} ${widget.unit}',
               '${_values.end.round()} ${widget.unit}',
@@ -248,7 +252,7 @@ class _ConditionEditorDialogState extends State<_ConditionEditorDialog> {
             height: 52,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.navActiveGreen,
+                backgroundColor: context.brandGreenColor,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -259,9 +263,9 @@ class _ConditionEditorDialogState extends State<_ConditionEditorDialog> {
                 widget.onSaved(_values.start, _values.end);
                 Navigator.of(context).pop();
               },
-              child: const Text(
-                'Save Target Condition',
-                style: TextStyle(
+              child: Text(
+                context.strings.saveTargetCondition,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),

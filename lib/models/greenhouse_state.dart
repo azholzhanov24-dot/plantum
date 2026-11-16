@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../services/supabase_service.dart';
 
 /// State controller for the greenhouse metrics, actuators, and target conditions.
 class GreenhouseController extends ChangeNotifier {
@@ -91,21 +92,21 @@ class GreenhouseController extends ChangeNotifier {
   }
 
   // Toggle Actuators with universal floating notifications
-  void toggleWatering(bool value) {
+  void toggleWatering(bool value, [String? customToast]) {
     _isWateringOn = value;
-    triggerToast(value ? 'Watering successfully activated' : 'Watering deactivated');
+    triggerToast(customToast ?? (value ? 'Watering successfully activated' : 'Watering deactivated'));
     notifyListeners();
   }
 
-  void toggleLighting(bool value) {
+  void toggleLighting(bool value, [String? customToast]) {
     _isLightingOn = value;
-    triggerToast(value ? 'Lighting successfully activated' : 'Lighting deactivated');
+    triggerToast(customToast ?? (value ? 'Lighting successfully activated' : 'Lighting deactivated'));
     notifyListeners();
   }
 
-  void toggleVentilation(bool value) {
+  void toggleVentilation(bool value, [String? customToast]) {
     _isVentilationOn = value;
-    triggerToast(value ? 'Ventilation successfully activated' : 'Ventilation deactivated');
+    triggerToast(customToast ?? (value ? 'Ventilation successfully activated' : 'Ventilation deactivated'));
     notifyListeners();
   }
 
@@ -161,10 +162,29 @@ class GreenhouseController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setUsername(String username) {
+    _username = username.trim();
+    notifyListeners();
+  }
+
   void clearUser() {
     _username = null;
     _email = null;
     notifyListeners();
+  }
+
+  /// Load persisted user profile from Supabase
+  Future<void> loadUserProfileFromSupabase() async {
+    try {
+      final prof = await SupabaseService.getUserProfile();
+      if (prof != null) {
+        final uname = prof['username']?.toString();
+        final mail = prof['email']?.toString();
+        if (uname != null && uname.isNotEmpty) _username = uname;
+        if (mail != null && mail.isNotEmpty) _email = mail;
+        notifyListeners();
+      }
+    } catch (_) {}
   }
 
   // Greenhouse setup / deployment
@@ -191,6 +211,24 @@ class GreenhouseController extends ChangeNotifier {
       _greenhouseLongitude = longitude;
     }
     notifyListeners();
+  }
+
+  /// Load persisted greenhouse parameters from Supabase database
+  Future<void> loadGreenhouseFromSupabase() async {
+    try {
+      final gh = await SupabaseService.getUserGreenhouse();
+      if (gh != null) {
+        updateGreenhouseDetails(
+          name: gh['name']?.toString() ?? _greenhouseName,
+          area: (gh['area_sqm'] as num?)?.toDouble() ?? _greenhouseArea,
+          address: gh['address']?.toString() ?? _greenhouseAddress,
+          latitude: (gh['latitude'] as num?)?.toDouble() ?? _greenhouseLatitude,
+          longitude: (gh['longitude'] as num?)?.toDouble() ?? _greenhouseLongitude,
+        );
+      }
+    } catch (_) {
+      // Ignored if offline or unauthenticated
+    }
   }
 
   // 3D Viewport Zoom controls

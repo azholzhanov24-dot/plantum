@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
+import '../l10n/app_strings.dart';
+import '../theme/app_theme.dart';
 
 /// Reusable confirmation dialog for device/actuator switches across all screens.
 /// Returns `true` if the user confirms the action, `false` otherwise.
@@ -19,30 +20,30 @@ Future<bool> showToggleConfirmDialog({
 
   final message = customMessage ??
       (turnOn
-          ? 'Are you sure you want to turn ON $deviceDisplayName?'
-          : 'Are you sure you want to turn OFF $deviceDisplayName?');
+          ? context.strings.confirmTurnOn(deviceDisplayName)
+          : context.strings.confirmTurnOff(deviceDisplayName));
 
   final result = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      backgroundColor: Colors.white,
+      backgroundColor: context.surfaceColor,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20.0),
       ),
       title: Text(
         deviceName,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 20.0,
           fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
+          color: context.textPrimaryColor,
         ),
       ),
       content: Text(
         message,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 15.0,
-          color: Color(0xFF555555),
+          color: context.textSecondaryColor,
           height: 1.4,
         ),
       ),
@@ -50,13 +51,13 @@ Future<bool> showToggleConfirmDialog({
       actions: [
         TextButton(
           style: TextButton.styleFrom(
-            foregroundColor: const Color(0xFF6B7770),
+            foregroundColor: context.textSecondaryColor,
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
           ),
           onPressed: () => Navigator.of(ctx).pop(false),
-          child: const Text(
-            'Cancel',
-            style: TextStyle(
+          child: Text(
+            context.strings.cancel,
+            style: const TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 14.5,
             ),
@@ -64,7 +65,7 @@ Future<bool> showToggleConfirmDialog({
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: confirmColor ?? AppColors.navActiveGreen,
+            backgroundColor: confirmColor ?? context.brandGreenColor,
             foregroundColor: Colors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -73,9 +74,9 @@ Future<bool> showToggleConfirmDialog({
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
           ),
           onPressed: () => Navigator.of(ctx).pop(true),
-          child: const Text(
-            'Confirm',
-            style: TextStyle(
+          child: Text(
+            context.strings.confirm,
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 14.5,
             ),

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../l10n/app_strings.dart';
 import '../../models/greenhouse_state.dart';
+import '../../services/supabase_service.dart';
 import '../../theme/app_colors.dart';
 import '../main_wrapper.dart';
 import 'sign_up_screen.dart';
@@ -27,61 +30,124 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
-  void _handleSignIn() {
+  Future<void> _handleSignIn() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
-    // Save mock user in GreenhouseController if available
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
     try {
-      final controller = GreenhouseScope.of(context);
-      controller.setUser(
-        username: _emailController.text.split('@').first,
-        email: _emailController.text.trim(),
-      );
-    } catch (_) {
-      // Ignored outside GreenhouseScope
-    }
+      if (SupabaseService.isInitialized) {
+        await SupabaseService.signIn(
+          email: email,
+          password: password,
+        );
+      }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          children: [
-            Icon(Icons.check_circle_rounded, color: AppColors.authGreen, size: 18),
-            SizedBox(width: 8),
-            Text(
-              'Signed in! Opening Dashboard...',
-              style: TextStyle(
-                color: AppColors.authGreen,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
+      if (mounted) {
+        // Save user and load greenhouse from Supabase
+        try {
+          final controller = GreenhouseScope.of(context);
+          controller.setUser(
+            username: email.split('@').first,
+            email: email,
+          );
+          await controller.loadGreenhouseFromSupabase();
+        } catch (_) {}
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle_rounded, color: AppColors.authGreen, size: 18),
+                SizedBox(width: 8),
+                Text(
+                  'Signed in! Opening Dashboard...',
+                  style: TextStyle(
+                    color: AppColors.authGreen,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-        backgroundColor: AppColors.authGreenSoft,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        duration: const Duration(milliseconds: 1400),
-      ),
-    );
+            backgroundColor: AppColors.authGreenSoft,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            duration: const Duration(milliseconds: 1400),
+          ),
+        );
 
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const MainWrapper()),
-        (route) => false,
-      );
-    });
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const MainWrapper()),
+          (route) => false,
+        );
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline_rounded, color: Colors.white, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    e.message,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.tempAccent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Sign in failed: $e',
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+            ),
+            backgroundColor: AppColors.tempAccent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
-  void _showForgotPasswordToast() {
+  Future<void> _showForgotPasswordToast() async {
+    final email = _emailController.text.trim();
+    if (email.isNotEmpty && email.contains('@')) {
+      try {
+        if (SupabaseService.isInitialized) {
+          await SupabaseService.resetPassword(email: email);
+        }
+      } catch (_) {}
+    }
+
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text(
-          'Password reset link sent to your email',
-          style: TextStyle(
+        content: Text(
+          email.isNotEmpty
+              ? 'Password reset link sent to $email'
+              : 'Please enter your email above to receive a reset link',
+          style: const TextStyle(
             color: AppColors.authGreen,
             fontWeight: FontWeight.w600,
             fontSize: 13,
@@ -145,9 +211,9 @@ class _SignInScreenState extends State<SignInScreen> {
                     const SizedBox(height: 28),
 
                     // Heading
-                    const Text(
-                      'Welcome back',
-                      style: TextStyle(
+                    Text(
+                      context.strings.welcomeBack,
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: AppColors.authText,
@@ -167,9 +233,9 @@ class _SignInScreenState extends State<SignInScreen> {
                     const SizedBox(height: 24),
 
                     // Field 1: Email
-                    const Text(
-                      'Email',
-                      style: TextStyle(
+                    Text(
+                      context.strings.email,
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: AppColors.authMuted,
@@ -223,9 +289,9 @@ class _SignInScreenState extends State<SignInScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Password',
-                          style: TextStyle(
+                        Text(
+                          context.strings.password,
+                          style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: AppColors.authMuted,
@@ -233,9 +299,9 @@ class _SignInScreenState extends State<SignInScreen> {
                         ),
                         GestureDetector(
                           onTap: _showForgotPasswordToast,
-                          child: const Text(
-                            'Forgot password?',
-                            style: TextStyle(
+                          child: Text(
+                            context.strings.forgotPassword,
+                            style: const TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w600,
                               color: AppColors.authGreen,
@@ -318,9 +384,9 @@ class _SignInScreenState extends State<SignInScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text(
-                                'Sign in',
-                                style: TextStyle(
+                            : Text(
+                                context.strings.signIn,
+                                style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.white,
@@ -337,9 +403,9 @@ class _SignInScreenState extends State<SignInScreen> {
                         alignment: WrapAlignment.center,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          const Text(
-                            "Don't have an account? ",
-                            style: TextStyle(
+                          Text(
+                            context.strings.dontHaveAccount,
+                            style: const TextStyle(
                               fontSize: 13,
                               color: AppColors.authMuted,
                             ),
@@ -356,9 +422,9 @@ class _SignInScreenState extends State<SignInScreen> {
                                 );
                               }
                             },
-                            child: const Text(
-                              'Sign up',
-                              style: TextStyle(
+                            child: Text(
+                              context.strings.signUp,
+                              style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.authGreen,

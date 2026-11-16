@@ -3,8 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:plantum/main.dart';
 import 'package:plantum/models/greenhouse_state.dart';
 import 'package:plantum/screens/main_wrapper.dart';
+import 'package:plantum/theme/theme_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
   testWidgets('Plantum app starts on SignUpScreen by default and can switch to SignInScreen',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(800, 1200);
@@ -268,7 +273,7 @@ void main() {
     await tester.pump(const Duration(seconds: 4));
   });
 
-  testWidgets('Settings dialog displays greenhouse info and Log out button',
+  testWidgets('Settings screen displays profile, greenhouse info, theme options, and logs out with confirmation',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(800, 1200);
     tester.view.devicePixelRatio = 1.0;
@@ -290,24 +295,118 @@ void main() {
     // Verify name on Live banner
     expect(find.text('Live • Tomato Palace'), findsOneWidget);
 
-    // Tap Settings gear
+    // Tap Settings gear to open SettingsScreen
     await tester.tap(find.byIcon(Icons.settings_outlined));
     await tester.pumpAndSettle();
 
-    // Settings dialog is open
+    // Settings screen is open
     expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('ACTIVE GREENHOUSE'), findsOneWidget);
     expect(find.text('Tomato Palace'), findsOneWidget);
     expect(find.text('Area: 36 m²'), findsOneWidget);
+    expect(find.text('PREFERENCES'), findsOneWidget);
+    expect(find.text('Appearance'), findsOneWidget);
+    expect(find.text('Light'), findsOneWidget);
+    expect(find.text('Dark'), findsOneWidget);
+    expect(find.text('Language'), findsOneWidget);
     expect(find.text('Log out'), findsOneWidget);
 
-    // Tap Log out -> returns to SignInScreen
-    await tester.tap(find.text('Log out'));
+    // Tap Dark mode switch
+    await tester.tap(find.text('Dark'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Welcome back'), findsOneWidget);
-    expect(find.text('Sign in'), findsOneWidget);
+    // Tap Language selector to open bottom sheet
+    await tester.tap(find.text('Language'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Select Language'), findsOneWidget);
+    expect(find.text('English'), findsWidgets);
+    expect(find.text('Русский'), findsOneWidget);
+    expect(find.text('Қазақша'), findsOneWidget);
+
+    // Select Russian - UI instantly translates to Russian
+    await tester.tap(find.text('Русский'));
+    await tester.pumpAndSettle();
+
+    // Verify Russian translation is active
+    expect(find.text('Выйти'), findsOneWidget);
+
+    // Tap Log out button in Russian
+    await tester.tap(find.text('Выйти'));
+    await tester.pumpAndSettle();
+
+    // Confirmation dialog is displayed in Russian
+    expect(find.text('Выйти из Plantum?'), findsOneWidget);
+    expect(find.text('Отмена'), findsOneWidget);
+
+    // Tap confirm 'Выйти' button in dialog (last ElevatedButton with 'Выйти')
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Выйти').last);
+    await tester.pumpAndSettle();
+
+    // Navigated to SignInScreen in Russian
+    expect(find.text('С возвращением'), findsOneWidget);
+    expect(find.text('Войти'), findsWidgets);
 
     // Flush any pending toast timers
+    await tester.pump(const Duration(seconds: 4));
+  });
+
+  testWidgets('Instant multi-language translation (EN, RU, KZ) without overflow',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(360, 800); // Standard compact mobile viewport
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final controller = GreenhouseController();
+    final themeController = ThemeController();
+
+    await tester.pumpWidget(PlantumApp(
+      controller: controller,
+      themeController: themeController,
+      home: const MainWrapper(),
+    ));
+    await tester.pumpAndSettle();
+
+    // 1. Initial English
+    expect(find.text('Temperature'), findsOneWidget);
+    expect(find.text('Soil moisture'), findsOneWidget);
+    expect(find.text('Norm'), findsNWidgets(3));
+
+    // 2. Switch to Russian
+    await themeController.setLanguage('ru');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Температура'), findsOneWidget);
+    expect(find.text('Влажность почвы'), findsOneWidget);
+    expect(find.text('Норма'), findsNWidgets(3));
+
+    // 3. Switch to Kazakh
+    await themeController.setLanguage('kk');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Топырақ ылғалдылығы'), findsOneWidget);
+    expect(find.text('Қалыпты'), findsNWidgets(3));
+
+    // Switch to Control screen in Kazakh
+    await tester.tap(find.byIcon(Icons.tune_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Басқару'), findsOneWidget);
+    expect(find.text('Суару'), findsOneWidget);
+    expect(find.text('Жарық'), findsOneWidget);
+    expect(find.text('Желдету'), findsOneWidget);
+    expect(find.text('Жағдайларды орнату'), findsOneWidget);
+
+    // Switch back to English
+    await themeController.setLanguage('en');
+    await tester.pumpAndSettle();
+    expect(find.text('Control'), findsOneWidget);
+    expect(find.text('Watering'), findsOneWidget);
+
+    // Flush any pending timers
     await tester.pump(const Duration(seconds: 4));
   });
 }

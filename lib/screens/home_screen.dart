@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_strings.dart';
 import '../models/greenhouse_state.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import '../widgets/confirm_toggle_dialog.dart';
 import '../widgets/sensor_card.dart';
-import 'auth/sign_in_screen.dart';
+import 'settings_screen.dart';
 
 /// Screen 1: Home Dashboard displaying greenhouse live metrics and photo banner.
 class HomeScreen extends StatelessWidget {
@@ -17,6 +19,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = GreenhouseScope.of(context);
+    final strings = context.strings;
 
     // Direct dynamic progress calculations based on real sensor numbers
     // 1. Temperature: base scale 0–50°C
@@ -29,7 +32,7 @@ class HomeScreen extends StatelessWidget {
     final soilProgress = (controller.soilMoisture / 100.0).clamp(0.0, 1.0);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.bgColor,
       body: SafeArea(
         bottom: false,
         child: SingleChildScrollView(
@@ -74,27 +77,30 @@ class HomeScreen extends StatelessWidget {
                     width: 40.0,
                     height: 40.0,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.surfaceColor,
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.cardBorder, width: 1.0),
+                      border: Border.all(color: context.dividerLineColor, width: 1.0),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
+                          color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.03),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
                     child: IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.settings_outlined,
-                        color: AppColors.textPrimary,
+                        color: context.textPrimaryColor,
                         size: 20.0,
                       ),
                       splashRadius: 20.0,
                       padding: EdgeInsets.zero,
+                      tooltip: context.strings.settings,
                       onPressed: () {
-                        _showSettingsDialog(context);
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                        );
                       },
                     ),
                   ),
@@ -119,9 +125,9 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   // 1. Temperature Card (0-50°C scale)
                   SensorCard(
-                    title: 'Temperature',
+                    title: context.strings.temperature,
                     value: '${controller.temperature.round()}°C',
-                    subtitle: 'Target: ${controller.tempMin.round()}–${controller.tempMax.round()}°C',
+                    subtitle: context.strings.targetFormat(controller.tempMin, controller.tempMax, '°C'),
                     icon: Icons.thermostat_rounded,
                     accentColor: AppColors.tempAccent,
                     progress: tempProgress,
@@ -130,9 +136,9 @@ class HomeScreen extends StatelessWidget {
 
                   // 2. Humidity Card (0-100% scale)
                   SensorCard(
-                    title: 'Humidity',
+                    title: context.strings.humidity,
                     value: '${controller.humidity.round()}%',
-                    subtitle: 'Target: ${controller.humidityMin.round()}–${controller.humidityMax.round()}%',
+                    subtitle: context.strings.targetFormat(controller.humidityMin, controller.humidityMax, '%'),
                     icon: Icons.water_drop_rounded,
                     accentColor: AppColors.humidityAccent,
                     progress: humidityProgress,
@@ -141,9 +147,9 @@ class HomeScreen extends StatelessWidget {
 
                   // 3. Soil Moisture Card (0-100% scale)
                   SensorCard(
-                    title: 'Soil moisture',
+                    title: context.strings.soilMoisture,
                     value: '${controller.soilMoisture.round()}%',
-                    subtitle: 'Target: ${controller.soilMoistureMin.round()}–${controller.soilMoistureMax.round()}%',
+                    subtitle: context.strings.targetFormat(controller.soilMoistureMin, controller.soilMoistureMax, '%'),
                     icon: Icons.grass_rounded,
                     accentColor: AppColors.soilAccent,
                     progress: soilProgress,
@@ -152,9 +158,11 @@ class HomeScreen extends StatelessWidget {
 
                   // 4. Grow Light Card (Confirmation dialog before toggle)
                   SensorCard(
-                    title: 'Grow Light',
-                    value: controller.isLightingOn ? 'ON' : 'OFF',
-                    subtitle: 'Manual mode',
+                    title: context.strings.growLight,
+                    value: controller.isLightingOn
+                        ? context.strings.on.toUpperCase()
+                        : context.strings.off.toUpperCase(),
+                    subtitle: context.strings.manualMode,
                     icon: Icons.wb_sunny_rounded,
                     accentColor: AppColors.lightAccent,
                     isSwitch: true,
@@ -162,23 +170,33 @@ class HomeScreen extends StatelessWidget {
                     onToggle: (_) async {
                       final confirmed = await showToggleConfirmDialog(
                         context: context,
-                        deviceName: 'Grow Light',
+                        deviceName: strings.growLight,
                         turnOn: !controller.isLightingOn,
                         confirmColor: AppColors.lightAccent,
                       );
                       if (confirmed) {
-                        controller.toggleLighting(!controller.isLightingOn);
+                        controller.toggleLighting(
+                          !controller.isLightingOn,
+                          !controller.isLightingOn
+                              ? strings.toastLightingActivated
+                              : strings.toastLightingDeactivated,
+                        );
                       }
                     },
                     onTap: () async {
                       final confirmed = await showToggleConfirmDialog(
                         context: context,
-                        deviceName: 'Grow Light',
+                        deviceName: strings.growLight,
                         turnOn: !controller.isLightingOn,
                         confirmColor: AppColors.lightAccent,
                       );
                       if (confirmed) {
-                        controller.toggleLighting(!controller.isLightingOn);
+                        controller.toggleLighting(
+                          !controller.isLightingOn,
+                          !controller.isLightingOn
+                              ? strings.toastLightingActivated
+                              : strings.toastLightingDeactivated,
+                        );
                       }
                     },
                   ),
@@ -280,7 +298,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Live • ${controller.greenhouseName}',
+                      context.strings.liveGreenhouse(controller.greenhouseName),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11.5,
@@ -293,76 +311,6 @@ class HomeScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showSettingsDialog(BuildContext context) {
-    final controller = GreenhouseScope.of(context);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.settings_outlined, color: AppColors.brandIconGreen, size: 22),
-            SizedBox(width: 8),
-            Text('Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              controller.greenhouseName,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Area: ${controller.greenhouseArea.toStringAsFixed(0)} m²',
-              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-            ),
-            Text(
-              'Location: ${controller.greenhouseAddress}',
-              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 12),
-            const Divider(),
-            const SizedBox(height: 8),
-            const Text(
-              'Plantum Smart Greenhouse v1.0.0\nAutomatic climate control is running smoothly.',
-              style: TextStyle(fontSize: 12, color: AppColors.textMuted),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton.icon(
-            icon: const Icon(Icons.logout_rounded, size: 18, color: AppColors.tempAccent),
-            label: const Text('Log out', style: TextStyle(color: AppColors.tempAccent, fontWeight: FontWeight.w600)),
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              controller.clearUser();
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const SignInScreen()),
-                (route) => false,
-              );
-            },
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.authGreen,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Close'),
-          ),
-        ],
       ),
     );
   }

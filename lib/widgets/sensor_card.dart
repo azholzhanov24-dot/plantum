@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_strings.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 
 /// Modern, clean white sensor card widget based on the Plantum reference design.
 class SensorCard extends StatelessWidget {
@@ -32,12 +34,12 @@ class SensorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surfaceColor,
         borderRadius: BorderRadius.circular(24.0),
-        border: Border.all(color: AppColors.cardBorder, width: 1.0),
+        border: Border.all(color: context.dividerLineColor, width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.035),
+            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.035),
             blurRadius: 12.0,
             offset: const Offset(0, 4),
           ),
@@ -63,30 +65,31 @@ class SensorCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // 40x40 container with rounded corners
+                      // Leading Icon
                       Container(
-                        width: 40.0,
-                        height: 40.0,
+                        width: 36.0,
+                        height: 36.0,
                         decoration: BoxDecoration(
                           color: (isSwitch && !switchValue)
-                              ? const Color(0xFFF0F2F1)
+                              ? context.subtleSurfaceColor
                               : accentColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(12.0),
+                          borderRadius: BorderRadius.circular(10.0),
                         ),
                         child: Icon(
                           icon,
-                          size: 22.0,
+                          size: 20.0,
                           color: (isSwitch && !switchValue)
-                              ? const Color(0xFF9EA8A2)
+                              ? context.textSecondaryColor
                               : accentColor,
                         ),
                       ),
+                      const SizedBox(width: 4.0),
 
                       // Right side: "Norm" badge or interactive Switch
                       if (isSwitch)
                         _buildSwitch()
                       else
-                        _buildNormBadge(),
+                        Flexible(child: _buildNormBadge(context)),
                     ],
                   ),
 
@@ -95,13 +98,20 @@ class SensorCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.cardTitle,
-                          letterSpacing: -0.1,
+                      SizedBox(
+                        height: 18.0,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w500,
+                              color: context.textSecondaryColor,
+                              letterSpacing: -0.1,
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 3.0),
@@ -109,10 +119,10 @@ class SensorCard extends StatelessWidget {
                         fit: BoxFit.scaleDown,
                         child: Text(
                           value,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 28.0,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.cardValue,
+                            color: context.textPrimaryColor,
                             letterSpacing: -0.5,
                             height: 1.15,
                           ),
@@ -142,10 +152,10 @@ class SensorCard extends StatelessWidget {
                       ],
                       Text(
                         subtitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.cardTarget,
+                          color: context.textSecondaryColor,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -159,20 +169,23 @@ class SensorCard extends StatelessWidget {
       );
   }
 
-  Widget _buildNormBadge() {
+  Widget _buildNormBadge(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.5),
+      padding: const EdgeInsets.symmetric(horizontal: 7.0, vertical: 3.5),
       decoration: BoxDecoration(
         color: AppColors.badgeGreenBg,
         borderRadius: BorderRadius.circular(8.0),
       ),
-      child: const Text(
-        'Norm',
-        style: TextStyle(
-          fontSize: 11.0,
-          fontWeight: FontWeight.bold,
-          color: AppColors.badgeGreenText,
-          letterSpacing: 0.1,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          context.strings.norm,
+          style: const TextStyle(
+            fontSize: 11.0,
+            fontWeight: FontWeight.bold,
+            color: AppColors.badgeGreenText,
+            letterSpacing: 0.1,
+          ),
         ),
       ),
     );

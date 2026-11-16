@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_strings.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import 'control_screen.dart';
 import 'home_screen.dart';
 
@@ -26,7 +28,7 @@ class _MainWrapperState extends State<MainWrapper> {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480.0),
         child: Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.bgColor,
           body: IndexedStack(
             index: _currentIndex,
             children: [
@@ -56,11 +58,12 @@ class _MainWrapperState extends State<MainWrapper> {
   Widget _buildBottomNavigationBar() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surfaceColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
+        border: Border(top: BorderSide(color: context.dividerLineColor, width: 1.0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withValues(alpha: context.isDark ? 0.25 : 0.06),
             blurRadius: 16.0,
             offset: const Offset(0, -4),
           ),
@@ -78,25 +81,25 @@ class _MainWrapperState extends State<MainWrapper> {
                 index: 0,
                 icon: Icons.home_outlined,
                 activeIcon: Icons.home_rounded,
-                tooltip: 'Home',
+                tooltip: context.strings.navHome,
               ),
               _buildNavItem(
                 index: 1,
                 icon: Icons.tune_rounded,
                 activeIcon: Icons.tune_rounded,
-                tooltip: 'Control',
+                tooltip: context.strings.navControl,
               ),
               _buildNavItem(
                 index: 2,
                 icon: Icons.notifications_none_rounded,
                 activeIcon: Icons.notifications_rounded,
-                tooltip: 'Notifications',
+                tooltip: context.strings.navNotifications,
               ),
               _buildNavItem(
                 index: 3,
                 icon: Icons.history_rounded,
                 activeIcon: Icons.history_rounded,
-                tooltip: 'History',
+                tooltip: context.strings.navHistory,
               ),
             ],
           ),
@@ -128,14 +131,14 @@ class _MainWrapperState extends State<MainWrapper> {
           padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 8.0),
           decoration: BoxDecoration(
             color: isSelected
-                ? const Color(0xFFE8F5E9)
+                ? context.greenSoftColor
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(16.0),
           ),
           child: Icon(
             isSelected ? activeIcon : icon,
             size: 26.0,
-            color: isSelected ? const Color(0xFF2E7D32) : const Color(0xFF333E37),
+            color: isSelected ? context.brandGreenColor : context.textSecondaryColor,
           ),
         ),
       ),
@@ -144,17 +147,17 @@ class _MainWrapperState extends State<MainWrapper> {
 
   Widget _buildNotificationsPlaceholder() {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.bgColor,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.bgColor,
         elevation: 0,
         centerTitle: false,
-        title: const Text(
-          'Notifications',
+        title: Text(
+          context.strings.notifications,
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: context.textPrimaryColor,
           ),
         ),
       ),
@@ -162,23 +165,23 @@ class _MainWrapperState extends State<MainWrapper> {
         padding: const EdgeInsets.all(20.0),
         children: [
           _buildNotificationItem(
-            title: 'Watering routine completed',
-            subtitle: 'Zone 1 tomato crops received 150ml moisture',
-            time: '12m ago',
+            title: context.strings.notifWateringTitle,
+            subtitle: context.strings.notifWateringSub,
+            time: context.strings.time12mAgo,
             icon: Icons.water_drop_rounded,
             iconColor: AppColors.waterBlue,
           ),
           _buildNotificationItem(
-            title: 'Temperature optimal',
-            subtitle: 'Greenhouse maintained 24°C target condition',
-            time: '1h ago',
+            title: context.strings.notifTempTitle,
+            subtitle: context.strings.notifTempSub,
+            time: context.strings.time1hAgo,
             icon: Icons.thermostat_rounded,
             iconColor: AppColors.tempAccent,
           ),
           _buildNotificationItem(
-            title: 'Ventilation active',
-            subtitle: 'Exhaust fan cycled to regulate air humidity',
-            time: '3h ago',
+            title: context.strings.notifVentTitle,
+            subtitle: context.strings.notifVentSub,
+            time: context.strings.time3hAgo,
             icon: Icons.air_rounded,
             iconColor: AppColors.fanGreen,
           ),
@@ -198,11 +201,12 @@ class _MainWrapperState extends State<MainWrapper> {
       margin: const EdgeInsets.only(bottom: 12.0),
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surfaceColor,
         borderRadius: BorderRadius.circular(20.0),
+        border: Border.all(color: context.dividerLineColor, width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.03),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -230,11 +234,13 @@ class _MainWrapperState extends State<MainWrapper> {
                     Expanded(
                       child: Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15.0,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: context.textPrimaryColor,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 8.0),
@@ -242,7 +248,7 @@ class _MainWrapperState extends State<MainWrapper> {
                       time,
                       style: TextStyle(
                         fontSize: 12.0,
-                        color: Colors.grey.shade500,
+                        color: context.textSecondaryColor,
                       ),
                     ),
                   ],
@@ -252,7 +258,7 @@ class _MainWrapperState extends State<MainWrapper> {
                   subtitle,
                   style: TextStyle(
                     fontSize: 13.0,
-                    color: Colors.grey.shade600,
+                    color: context.textSecondaryColor,
                   ),
                 ),
               ],
@@ -265,17 +271,17 @@ class _MainWrapperState extends State<MainWrapper> {
 
   Widget _buildHistoryPlaceholder() {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.bgColor,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.bgColor,
         elevation: 0,
         centerTitle: false,
-        title: const Text(
-          'Telemetry History',
+        title: Text(
+          context.strings.telemetryHistory,
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: context.textPrimaryColor,
           ),
         ),
       ),
@@ -285,11 +291,12 @@ class _MainWrapperState extends State<MainWrapper> {
           Container(
             padding: const EdgeInsets.all(20.0),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.surfaceColor,
               borderRadius: BorderRadius.circular(24.0),
+              border: Border.all(color: context.dividerLineColor, width: 1.0),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
+                  color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.03),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -301,13 +308,13 @@ class _MainWrapperState extends State<MainWrapper> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        '24h Microclimate Trend',
+                        context.strings.trend24h,
                         style: TextStyle(
                           fontSize: 16.0,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: context.textPrimaryColor,
                         ),
                       ),
                     ),
@@ -315,13 +322,13 @@ class _MainWrapperState extends State<MainWrapper> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.navActiveGreen.withValues(alpha: 0.1),
+                        color: context.greenSoftColor,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Text(
-                        'Stable',
+                      child: Text(
+                        context.strings.stable,
                         style: TextStyle(
-                          color: AppColors.navActiveGreen,
+                          color: context.brandGreenColor,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -333,9 +340,9 @@ class _MainWrapperState extends State<MainWrapper> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildHistoryStat('Avg Temp', '23.8 °C', AppColors.tempAccent),
-                    _buildHistoryStat('Avg Humidity', '76 %', AppColors.humidityAccent),
-                    _buildHistoryStat('Avg Moisture', '68 %', AppColors.soilAccent),
+                    _buildHistoryStat(context.strings.avgTemp, '23.8 °C', AppColors.tempAccent),
+                    _buildHistoryStat(context.strings.avgHumidity, '76 %', AppColors.humidityAccent),
+                    _buildHistoryStat(context.strings.avgMoisture, '68 %', AppColors.soilAccent),
                   ],
                 ),
                 const SizedBox(height: 20.0),
@@ -350,8 +357,8 @@ class _MainWrapperState extends State<MainWrapper> {
                         height: 30.0 + (i % 4) * 15.0 + (i % 3) * 10,
                         decoration: BoxDecoration(
                           color: i == 8
-                              ? AppColors.navActiveGreen
-                              : AppColors.navActiveGreen.withValues(alpha: 0.25),
+                              ? context.brandGreenColor
+                              : context.brandGreenColor.withValues(alpha: 0.25),
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
@@ -360,12 +367,12 @@ class _MainWrapperState extends State<MainWrapper> {
                 const SizedBox(height: 8.0),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text('00:00', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                    Text('06:00', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                    Text('12:00', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                    Text('18:00', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                    Text('Now', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                  children: [
+                    Text('00:00', style: TextStyle(fontSize: 11, color: context.textSecondaryColor)),
+                    Text('06:00', style: TextStyle(fontSize: 11, color: context.textSecondaryColor)),
+                    Text('12:00', style: TextStyle(fontSize: 11, color: context.textSecondaryColor)),
+                    Text('18:00', style: TextStyle(fontSize: 11, color: context.textSecondaryColor)),
+                    Text('Now', style: TextStyle(fontSize: 11, color: context.textSecondaryColor)),
                   ],
                 ),
               ],
@@ -375,17 +382,18 @@ class _MainWrapperState extends State<MainWrapper> {
           Container(
             padding: const EdgeInsets.all(18.0),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.surfaceColor,
               borderRadius: BorderRadius.circular(22.0),
+              border: Border.all(color: context.dividerLineColor, width: 1.0),
             ),
             child: Row(
               children: [
-                const Icon(Icons.analytics_outlined, color: AppColors.brandIconGreen, size: 28),
+                Icon(Icons.analytics_outlined, color: context.brandGreenColor, size: 28),
                 const SizedBox(width: 14),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Full telemetry export available via CSV or Cloud Sync.',
-                    style: TextStyle(fontSize: 13.5, color: AppColors.textSecondary),
+                    context.strings.exportNotice,
+                    style: TextStyle(fontSize: 13.5, color: context.textSecondaryColor),
                   ),
                 ),
               ],
@@ -403,7 +411,7 @@ class _MainWrapperState extends State<MainWrapper> {
           title,
           style: TextStyle(
             fontSize: 12.0,
-            color: Colors.grey.shade600,
+            color: context.textSecondaryColor,
           ),
         ),
         const SizedBox(height: 4.0),

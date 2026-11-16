@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_strings.dart';
 import '../models/greenhouse_state.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import '../widgets/condition_tile.dart';
 import '../widgets/confirm_toggle_dialog.dart';
 import '../widgets/control_toggle_tile.dart';
@@ -17,11 +19,11 @@ class ControlScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = GreenhouseScope.of(context);
+    final strings = context.strings;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.bgColor,
       body: SafeArea(
-        bottom: false,
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -34,9 +36,9 @@ class ControlScreen extends StatelessWidget {
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.arrow_back_rounded,
-                      color: AppColors.textPrimary,
+                      color: context.textPrimaryColor,
                       size: 26.0,
                     ),
                     padding: EdgeInsets.zero,
@@ -45,12 +47,12 @@ class ControlScreen extends StatelessWidget {
                     onPressed: onNavigateBack,
                   ),
                   const SizedBox(width: 14.0),
-                  const Text(
-                    'Control',
+                  Text(
+                    strings.control,
                     style: TextStyle(
                       fontSize: 24.0,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: context.textPrimaryColor,
                       letterSpacing: -0.4,
                     ),
                   ),
@@ -75,49 +77,64 @@ class ControlScreen extends StatelessWidget {
               // Actuators Section (Toggles with Confirmation Dialog)
               ControlToggleTile(
                 type: ActuatorType.watering,
-                title: 'Watering',
+                title: strings.watering,
                 isEnabled: controller.isWateringOn,
                 onChanged: (val) async {
                   final confirmed = await showToggleConfirmDialog(
                     context: context,
-                    deviceName: 'Watering',
+                    deviceName: strings.watering,
                     turnOn: val,
                     confirmColor: AppColors.waterBlue,
                   );
                   if (confirmed) {
-                    controller.toggleWatering(val);
+                    controller.toggleWatering(
+                      val,
+                      val
+                          ? strings.toastWateringActivated
+                          : strings.toastWateringDeactivated,
+                    );
                   }
                 },
               ),
               ControlToggleTile(
                 type: ActuatorType.lighting,
-                title: 'Lighting',
+                title: strings.lighting,
                 isEnabled: controller.isLightingOn,
                 onChanged: (val) async {
                   final confirmed = await showToggleConfirmDialog(
                     context: context,
-                    deviceName: 'Lighting',
+                    deviceName: strings.lighting,
                     turnOn: val,
                     confirmColor: AppColors.lightYellow,
                   );
                   if (confirmed) {
-                    controller.toggleLighting(val);
+                    controller.toggleLighting(
+                      val,
+                      val
+                          ? strings.toastLightingActivated
+                          : strings.toastLightingDeactivated,
+                    );
                   }
                 },
               ),
               ControlToggleTile(
                 type: ActuatorType.ventilation,
-                title: 'Ventilation',
+                title: strings.ventilation,
                 isEnabled: controller.isVentilationOn,
                 onChanged: (val) async {
                   final confirmed = await showToggleConfirmDialog(
                     context: context,
-                    deviceName: 'Ventilation',
+                    deviceName: strings.ventilation,
                     turnOn: val,
                     confirmColor: AppColors.fanGreen,
                   );
                   if (confirmed) {
-                    controller.toggleVentilation(val);
+                    controller.toggleVentilation(
+                      val,
+                      val
+                          ? strings.toastVentilationActivated
+                          : strings.toastVentilationDeactivated,
+                    );
                   }
                 },
               ),
@@ -125,12 +142,12 @@ class ControlScreen extends StatelessWidget {
               const SizedBox(height: 14.0),
 
               // Conditions Section Title
-              const Text(
-                'Set your conditions',
+              Text(
+                strings.setYourConditions,
                 style: TextStyle(
                   fontSize: 16.0,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: context.textPrimaryColor,
                   letterSpacing: -0.2,
                 ),
               ),
@@ -138,12 +155,12 @@ class ControlScreen extends StatelessWidget {
 
               // Condition Tiles
               ConditionTile(
-                label: 'Temperature',
+                label: context.strings.temperature,
                 valueText: '${controller.tempMin.round()}-${controller.tempMax.round()} °C',
                 onTap: () {
                   showConditionEditorSheet(
                     context: context,
-                    title: 'Temperature',
+                    title: context.strings.temperature,
                     unit: '°C',
                     currentMin: controller.tempMin,
                     currentMax: controller.tempMax,
@@ -156,12 +173,12 @@ class ControlScreen extends StatelessWidget {
                 },
               ),
               ConditionTile(
-                label: 'Humidity',
+                label: context.strings.humidity,
                 valueText: '${controller.humidityMin.round()}-${controller.humidityMax.round()} %',
                 onTap: () {
                   showConditionEditorSheet(
                     context: context,
-                    title: 'Humidity',
+                    title: context.strings.humidity,
                     unit: '%',
                     currentMin: controller.humidityMin,
                     currentMax: controller.humidityMax,
@@ -174,12 +191,12 @@ class ControlScreen extends StatelessWidget {
                 },
               ),
               ConditionTile(
-                label: 'Soil moisture',
+                label: context.strings.soilMoisture,
                 valueText: '${controller.soilMoistureMin.round()}-${controller.soilMoistureMax.round()} %',
                 onTap: () {
                   showConditionEditorSheet(
                     context: context,
-                    title: 'Soil Moisture',
+                    title: context.strings.soilMoisture,
                     unit: '%',
                     currentMin: controller.soilMoistureMin,
                     currentMax: controller.soilMoistureMax,
