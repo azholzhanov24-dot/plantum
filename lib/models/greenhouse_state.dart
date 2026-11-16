@@ -1,31 +1,32 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../services/supabase_service.dart';
 
-/// State controller for the greenhouse metrics, actuators, and target conditions.
 class GreenhouseController extends ChangeNotifier {
-  // Sensor readings
-  double _temperature = 24.0;
-  double _humidity = 79.0;
-  double _soilMoisture = 67.0;
+  // Состояние тумблеров
+  bool _isWateringOn = false;
+  bool _isLightingOn = false;
+  bool _isVentilationOn = false;
 
-  // Target ranges (Set your conditions)
+  // Текущие показатели датчиков
+  double _temperature = 24.5;
+  double _humidity = 65.0;
+  double _soilMoisture = 75.0;
+
+  // Состояние диапазонов условий
   double _tempMin = 20.0;
   double _tempMax = 28.0;
-
   double _humidityMin = 50.0;
   double _humidityMax = 80.0;
-
   double _soilMoistureMin = 60.0;
   double _soilMoistureMax = 90.0;
 
-  // Actuator switches
-  bool _isWateringOn = true;
-  bool _isLightingOn = true;
-  bool _isVentilationOn = true;
-
-  // 3D Viewport Zoom
+  // Уровень зума 3D
   double _zoomLevel = 1.0;
+
+  // Колбэк для отправки сообщений в 3D
+  void Function(String action, bool value)? _sendTo3DCallback;
 
   // Toast / Notification banner
   bool _isToastVisible = true;
@@ -39,13 +40,17 @@ class GreenhouseController extends ChangeNotifier {
   double _greenhouseLatitude = 47.1067;
   double _greenhouseLongitude = 51.9167;
 
-  // Registered user info (Client mock)
+  // Registered user info
   String? _username;
   String? _email;
 
   GreenhouseController() {
-    // Show initial banner matching Figma on startup for 3 seconds
     _scheduleToastDismissal(duration: const Duration(seconds: 3));
+  }
+
+  // Регистрация колбэка для 3D-сцены
+  void setIframeSender(void Function(String action, bool value) sender) {
+    _sendTo3DCallback = sender;
   }
 
   // Getters
@@ -79,9 +84,9 @@ class GreenhouseController extends ChangeNotifier {
   String? get username => _username;
   String? get email => _email;
 
-  String get tempRangeText => '${_tempMin.round()}-${_tempMax.round()}°C';
-  String get humidityRangeText => '${_humidityMin.round()}-${_humidityMax.round()}%';
-  String get soilMoistureRangeText => '${_soilMoistureMin.round()}-${_soilMoistureMax.round()}%';
+  String get tempRangeText => '${_tempMin.round()}-${_tempMax.round()} °C';
+  String get humidityRangeText => '${_humidityMin.round()}-${_humidityMax.round()} %';
+  String get soilMoistureRangeText => '${_soilMoistureMin.round()}-${_soilMoistureMax.round()} %';
 
   // Sensor updates
   void updateSensors({double? temperature, double? humidity, double? soilMoisture}) {
@@ -91,21 +96,24 @@ class GreenhouseController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Toggle Actuators with universal floating notifications
+  // Toggle Actuators + отправка команд в 3D + тосты друга
   void toggleWatering(bool value, [String? customToast]) {
     _isWateringOn = value;
+    _sendTo3DCallback?.call('TOGGLE_WATER', value);
     triggerToast(customToast ?? (value ? 'Watering successfully activated' : 'Watering deactivated'));
     notifyListeners();
   }
 
   void toggleLighting(bool value, [String? customToast]) {
     _isLightingOn = value;
+    _sendTo3DCallback?.call('TOGGLE_UV', value);
     triggerToast(customToast ?? (value ? 'Lighting successfully activated' : 'Lighting deactivated'));
     notifyListeners();
   }
 
   void toggleVentilation(bool value, [String? customToast]) {
     _isVentilationOn = value;
+    _sendTo3DCallback?.call('TOGGLE_FAN', value);
     triggerToast(customToast ?? (value ? 'Ventilation successfully activated' : 'Ventilation deactivated'));
     notifyListeners();
   }
@@ -117,6 +125,8 @@ class GreenhouseController extends ChangeNotifier {
     _scheduleToastDismissal();
     notifyListeners();
   }
+
+  void showToast(String message) => triggerToast(message);
 
   void hideToast() {
     _isToastVisible = false;
@@ -132,8 +142,7 @@ class GreenhouseController extends ChangeNotifier {
     });
   }
 
-  // Condition range updates with automatic arithmetic mean calculation:
-  // currentValue = ((min + max) / 2).round()
+  // Condition range updates
   void updateTemperatureRange(double min, double max) {
     _tempMin = min;
     _tempMax = max;
@@ -155,7 +164,7 @@ class GreenhouseController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // User authentication info (local client mock)
+  // User authentication info
   void setUser({required String username, required String email}) {
     _username = username.trim();
     _email = email.trim();
@@ -226,9 +235,7 @@ class GreenhouseController extends ChangeNotifier {
           longitude: (gh['longitude'] as num?)?.toDouble() ?? _greenhouseLongitude,
         );
       }
-    } catch (_) {
-      // Ignored if offline or unauthenticated
-    }
+    } catch (_) {}
   }
 
   // 3D Viewport Zoom controls
@@ -242,11 +249,6 @@ class GreenhouseController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void resetZoom() {
-    _zoomLevel = 1.0;
-    notifyListeners();
-  }
-
   @override
   void dispose() {
     _toastTimer?.cancel();
@@ -254,7 +256,7 @@ class GreenhouseController extends ChangeNotifier {
   }
 }
 
-/// Inherited notifier to give access to [GreenhouseController] down the widget tree.
+/// InheritedNotifier автоматически отслеживает notifyListeners() в контроллере
 class GreenhouseScope extends InheritedNotifier<GreenhouseController> {
   const GreenhouseScope({
     super.key,

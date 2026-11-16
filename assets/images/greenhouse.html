@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { margin: 0; overflow: hidden; background-color: #111814; touch-action: none; }
+    canvas { width: 100vw; height: 100vh; display: block; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+</head>
+<body>
+<script>
+  let scene, camera, renderer;
+  let fanPivot, lampModel;
+  let isWatering = false, isFanOn = false, isLightOn = false;
+  let waterParticles;
+
+  let isDragging = false;
+  let previousMousePosition = { x: 0, y: 0 };
+  let cameraRotationX = 0;
+  let cameraRotationY = 0;
+
+  function init() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x111814);
+
+    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(5, 4, 7); 
+    camera.rotation.order = 'YXZ';
+
+    camera.lookAt(0, 1, 0);
+    cameraRotationY = camera.rotation.y;
+    cameraRotationX = camera.rotation.x;
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+      isDragging = true;
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+      const deltaX = e.clientX - previousMousePosition.x;
+      const deltaY = e.clientY - previousMousePosition.y;
+
+      cameraRotationY -= deltaX * 0.005;
+      cameraRotationX -= deltaY * 0.005;
+
+      const maxAngle = Math.PI / 3;
+      cameraRotationX = Math.max(-maxAngle, Math.min(maxAngle, cameraRotationX));
+
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('pointerup', () => {
+      isDragging = false;
+    });
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+    dirLight.position.set(5, 10, 7);
+    scene.add(dirLight);
+
+    const loader = new THREE.GLTFLoader();
+
+    // Исправленные пути через корень веб-сервера Flutter
+    loader.load('/assets/images/greenhouse.glb', function (gltf) {
+      const greenhouse = gltf.scene;
+      greenhouse.scale.set(5.0, 5.0, 5.0);
+
+      greenhouse.traverse((child) => {
+        if (child.isMesh) {
+          child.material.transparent = true;
+          child.material.opacity = 0.3;
+          child.material.side = THREE.DoubleSide;
+          child.material.depthWrite = false;
+        }
+      });
+
+      scene.add(greenhouse);
+    }, undefined, (err) => console.error('Ошибка теплицы:', err));
+
+    loader.load('/assets/images/fan_carcas.glb', function (gltf) {
+      const carcas = gltf.scene;
+      carcas.scale.set(3.0, 3.0, 3.0);
+      carcas.position.set(0, 2.0, 0);
+      scene.add(carcas);
+    }, undefined, (err) => console.error('Ошибка корпуса:', err));
+
+    loader.load('/assets/images/fan_lopast.glb', function (gltf) {
+      const rawBlades = gltf.scene;
+      rawBlades.scale.set(3.0, 3.0, 3.0);
+
+      const box = new THREE.Box3().setFromObject(rawBlades);
+      const center = box.getCenter(new THREE.Vector3());
+      rawBlades.position.sub(center);
+
+      fanPivot = new THREE.Group();
+      fanPivot.add(rawBlades);
+      fanPivot.position.copy(center).add(new THREE.Vector3(0, 2.0, 0));
+
+      scene.add(fanPivot);
+    }, undefined, (err) => console.error('Ошибка лопастей:', err));
+
+    loader.load('/assets/images/light.glb', function (gltf) {
+      lampModel = gltf.scene;
+      lampModel.position.set(0, 1.5, 0);
+      lampModel.scale.set(3.0, 3.0, 3.0);
+      scene.add(lampModel);
+    }, undefined, (err) => console.error('Ошибка лампы:', err));
+
+    const particleCount = 40;
+    const particleGeo = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    for(let i = 0; i < particleCount * 3; i += 3) {
+      positions[i] = (Math.random() - 0.5) * 1.0;
+      positions[i+1] = Math.random() * 0.5 + 0.5;
+      positions[i+2] = (Math.random() - 0.5) * 1.0;
+    }
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const particleMat = new THREE.PointsMaterial({ color: 0x3b82f6, size: 0.05 });
+    waterParticles = new THREE.Points(particleGeo, particleMat);
+    waterParticles.visible = false;
+    scene.add(waterParticles);
+
+    // Надежный приемщик сообщений (корректно обрабатывает true / false)
+    window.addEventListener('message', function(event) {
+      try {
+        let cmd = event.data;
+        if (typeof cmd === 'string') {
+          cmd = JSON.parse(cmd);
+        }
+
+        console.log("Получена команда из Flutter:", cmd);
+
+        if (cmd.action === 'TOGGLE_WATER') {
+          isWatering = Boolean(cmd.value);
+          if (waterParticles) waterParticles.visible = isWatering;
+        } else if (cmd.action === 'TOGGLE_UV') {
+          isLightOn = Boolean(cmd.value);
+        } else if (cmd.action === 'TOGGLE_FAN') {
+          isFanOn = Boolean(cmd.value);
+        }
+      } catch(e) { 
+        console.error("Ошибка обработки postMessage:", e); 
+      }
+    });
+
+    animate();
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+
+    camera.rotation.y = cameraRotationY;
+    camera.rotation.x = cameraRotationX;
+
+    if (isFanOn && fanPivot) {
+      fanPivot.rotation.z += 0.2; 
+    }
+
+    if (isWatering && waterParticles) {
+      const positions = waterParticles.geometry.attributes.position.array;
+      for(let i = 1; i < positions.length; i += 3) {
+        positions[i] -= 0.03;
+        if (positions[i] < 0) positions[i] = 1.0;
+      }
+      waterParticles.geometry.attributes.position.needsUpdate = true;
+    }
+
+    renderer.render(scene, camera);
+  }
+
+  init();
+</script>
+</body>
+</html>
