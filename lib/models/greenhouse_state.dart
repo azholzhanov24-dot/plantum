@@ -1,162 +1,99 @@
-import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-/// State controller for the greenhouse metrics, actuators, and target conditions.
 class GreenhouseController extends ChangeNotifier {
-  // Sensor readings
-  double _temperature = 24.0;
-  double _humidity = 79.0;
-  double _soilMoisture = 67.0;
+  // Состояние тумблеров
+  bool isWateringOn = false;
+  bool isLightingOn = false;
+  bool isVentilationOn = false;
 
-  // Target ranges (Set your conditions)
-  double _tempMin = 20.0;
-  double _tempMax = 28.0;
+  // Текущие показатели датчиков (для отображения на Home Screen)
+  double temperature = 24.5;
+  double humidity = 65.0;
+  double soilMoisture = 75.0;
 
-  double _humidityMin = 50.0;
-  double _humidityMax = 80.0;
+  // Состояние диапазонов условий
+  double tempMin = 20.0;
+  double tempMax = 28.0;
+  double humidityMin = 50.0;
+  double humidityMax = 80.0;
+  double soilMoistureMin = 60.0;
+  double soilMoistureMax = 90.0;
 
-  double _soilMoistureMin = 60.0;
-  double _soilMoistureMax = 90.0;
+  // Геттеры для текстовых диапазонов, которые запрашивает home_screen.dart
+  String get tempRangeText => '${tempMin.round()}-${tempMax.round()} °C';
+  String get humidityRangeText => '${humidityMin.round()}-${humidityMax.round()} %';
+  String get soilMoistureRangeText => '${soilMoistureMin.round()}-${soilMoistureMax.round()} %';
 
-  // Actuator switches
-  bool _isWateringOn = true;
-  bool _isLightingOn = true;
-  bool _isVentilationOn = true;
+  // Тост / Уведомления
+  bool isToastVisible = false;
+  String toastMessage = '';
 
-  // 3D Viewport Zoom
-  double _zoomLevel = 1.0;
+  // Колбэк для отправки сообщений в 3D
+  void Function(String action, bool value)? _sendTo3DCallback;
 
-  // Toast / Notification banner
-  bool _isToastVisible = true;
-  String _toastMessage = 'Watering successfully activated';
-  Timer? _toastTimer;
-
-  GreenhouseController() {
-    // Show toast for 4 seconds on initial startup matching Figma
-    _scheduleToastDismissal(duration: const Duration(seconds: 4));
+  void setIframeSender(void Function(String action, bool value) sender) {
+    _sendTo3DCallback = sender;
   }
 
-  // Getters
-  double get temperature => _temperature;
-  double get humidity => _humidity;
-  double get soilMoisture => _soilMoisture;
-
-  double get tempMin => _tempMin;
-  double get tempMax => _tempMax;
-
-  double get humidityMin => _humidityMin;
-  double get humidityMax => _humidityMax;
-
-  double get soilMoistureMin => _soilMoistureMin;
-  double get soilMoistureMax => _soilMoistureMax;
-
-  bool get isWateringOn => _isWateringOn;
-  bool get isLightingOn => _isLightingOn;
-  bool get isVentilationOn => _isVentilationOn;
-
-  double get zoomLevel => _zoomLevel;
-
-  bool get isToastVisible => _isToastVisible;
-  String get toastMessage => _toastMessage;
-
-  String get tempRangeText => '${_tempMin.round()}-${_tempMax.round()}°C';
-  String get humidityRangeText => '${_humidityMin.round()}-${_humidityMax.round()}%';
-  String get soilMoistureRangeText => '${_soilMoistureMin.round()}-${_soilMoistureMax.round()}%';
-
-  // Sensor updates
-  void updateSensors({double? temperature, double? humidity, double? soilMoisture}) {
-    if (temperature != null) _temperature = temperature;
-    if (humidity != null) _humidity = humidity;
-    if (soilMoisture != null) _soilMoisture = soilMoisture;
-    notifyListeners();
-  }
-
-  // Toggle Actuators
+  // Переключение тумблеров с отправкой команды в 3D
   void toggleWatering(bool value) {
-    _isWateringOn = value;
-    if (value) {
-      triggerToast('Watering successfully activated');
-    } else {
-      triggerToast('Watering deactivated');
-    }
+    isWateringOn = value;
+    _sendTo3DCallback?.call('TOGGLE_WATER', value);
+    showToast(value ? 'Watering activated' : 'Watering deactivated');
     notifyListeners();
   }
 
   void toggleLighting(bool value) {
-    _isLightingOn = value;
+    isLightingOn = value;
+    _sendTo3DCallback?.call('TOGGLE_UV', value);
+    showToast(value ? 'Lighting activated' : 'Lighting deactivated');
     notifyListeners();
   }
 
   void toggleVentilation(bool value) {
-    _isVentilationOn = value;
+    isVentilationOn = value;
+    _sendTo3DCallback?.call('TOGGLE_FAN', value);
+    showToast(value ? 'Ventilation activated' : 'Ventilation deactivated');
     notifyListeners();
   }
 
-  // Toast banner trigger
-  void triggerToast(String message) {
-    _toastMessage = message;
-    _isToastVisible = true;
-    _scheduleToastDismissal();
-    notifyListeners();
-  }
-
-  void hideToast() {
-    _isToastVisible = false;
-    _toastTimer?.cancel();
-    notifyListeners();
-  }
-
-  void _scheduleToastDismissal({Duration duration = const Duration(seconds: 3)}) {
-    _toastTimer?.cancel();
-    _toastTimer = Timer(duration, () {
-      _isToastVisible = false;
-      notifyListeners();
-    });
-  }
-
-  // Condition range updates
+  // Обновление диапазонов
   void updateTemperatureRange(double min, double max) {
-    _tempMin = min;
-    _tempMax = max;
+    tempMin = min;
+    tempMax = max;
+    showToast('Temperature updated');
     notifyListeners();
   }
 
   void updateHumidityRange(double min, double max) {
-    _humidityMin = min;
-    _humidityMax = max;
+    humidityMin = min;
+    humidityMax = max;
+    showToast('Humidity updated');
     notifyListeners();
   }
 
   void updateSoilMoistureRange(double min, double max) {
-    _soilMoistureMin = min;
-    _soilMoistureMax = max;
+    soilMoistureMin = min;
+    soilMoistureMax = max;
+    showToast('Soil moisture updated');
     notifyListeners();
   }
 
-  // 3D Viewport Zoom controls
-  void zoomIn() {
-    _zoomLevel = (_zoomLevel + 0.15).clamp(0.7, 2.2);
+  // Управление тостами
+  void showToast(String message) {
+    toastMessage = message;
+    isToastVisible = true;
     notifyListeners();
   }
 
-  void zoomOut() {
-    _zoomLevel = (_zoomLevel - 0.15).clamp(0.7, 2.2);
+  void hideToast() {
+    isToastVisible = false;
     notifyListeners();
-  }
-
-  void resetZoom() {
-    _zoomLevel = 1.0;
-    notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    _toastTimer?.cancel();
-    super.dispose();
   }
 }
 
-/// Inherited notifier to give access to [GreenhouseController] down the widget tree.
+/// InheritedNotifier автоматически отслеживает notifyListeners() в контроллере
 class GreenhouseScope extends InheritedNotifier<GreenhouseController> {
   const GreenhouseScope({
     super.key,
