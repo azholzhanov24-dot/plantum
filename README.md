@@ -20,10 +20,10 @@
 
 | Team Member | Role & Responsibilities |
 | :--- | :--- |
-| **Alizhan Zholzhanov** *(Жолжанов Алижан)* | Flutter application architecture, backend development, Supabase PostgreSQL schema, authentication, and real-time state synchronization |
-| **Utezhan Kairmukhanbet** *(Кайрмуханбет Утежан)* | Interactive 3D greenhouse modeling, spatial viewport integration, and technical/project documentation |
-| **Alikhan Salimov** *(Алихан Салимов)* | UI/UX design in Figma, color palette, light/dark mode styling, and interactive prototype flows |
-| **Anuar Kuanysh** *(Куаныш Ануар)* | UI/UX component design in Figma, multi-language layout adaptation (`EN`/`RU`/`KZ`), and user flow testing |
+| **Alizhan Zholzhanov** | Flutter application architecture, backend development, Supabase PostgreSQL schema, authentication, and real-time state synchronization |
+| **Utezhan Kairmukhanbet** | Interactive 3D greenhouse modeling, spatial viewport integration, and technical/project documentation |
+| **Alikhan Salimov** | UI/UX design in Figma, color palette, light/dark mode styling, and interactive prototype flows |
+| **Anuar Kuanysh** | UI/UX component design in Figma, multi-language layout adaptation (`EN`/`RU`/`KZ`), and user flow testing |
 
 ---
 
