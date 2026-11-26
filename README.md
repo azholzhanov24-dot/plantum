@@ -29,7 +29,7 @@
 
 ## Design & Interactive Prototype
 
-* **Figma Prototype:** [Open Plantum Interactive Prototype](INSERT_FIGMA_LINK_HERE)
+* **Figma Prototype:** [Open Plantum Interactive Prototype](https://www.figma.com/design/hgooDdtZhlYLJt7ei8P01D/Plantum-%E2%80%94-Core-Screens?node-id=0-1&t=Xo58JatpXx9pYxG7-1)
 * **Logo & Visual Style:** Soft, nature-inspired minimalist interface designed to reduce eye strain during outdoor and indoor use:
   * **Background:** `#F8F9FA` (Light Mode) / `#121412` (Dark Mode)
   * **Cards & Surfaces:** `#FFFFFF` (Light Mode) / `#1C1F1C` (Dark Mode)
