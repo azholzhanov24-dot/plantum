@@ -88,8 +88,9 @@ flowchart LR
     S <--> G
     S <--> GS
     S <--> SL
+```
 
-What happens step-by-step when the user presses "Water"?
+###What happens step-by-step when the user presses "Water"?
 UI Event: The user taps the Watering toggle on the Control screen.
 
 Data Layer Call: The service layer sends an asynchronous UPDATE request to Supabase targeting the active greenhouse's row in greenhouse_settings (watering_on = true).
